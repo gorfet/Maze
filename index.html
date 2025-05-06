@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Camille's Labyrinth</title>
-    <style>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1" />
+   <title>Camille's Labyrinth</title>
+   <style>
         body {
             margin: 0;
             padding: 0;
@@ -114,6 +114,7 @@
             font-size: 24px;
             user-select: none;
         }
+
         #menu {
             display: flex;
             flex-direction: column;
@@ -126,7 +127,7 @@
             height: 100%;
             background: #000;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: Arial;
             font-size: 2em;
             z-index: 10;
         }
@@ -145,32 +146,30 @@
         #menu button:hover {
             background: #45a049;
         }
-    </style>
-</head>
-<body>
-    <div id="menu">
-        <h1>Veilbound Labyrinth</h1>
-        <button id="playButton">Play</button>
-        <button id="exitButton">Exit</button>
-    </div>
+   <body>
+   <div id="menu">
+       <h1>Veilbound Labyrinth</h1>
+       <button id="playButton">Play</button>
+       <button id="exitButton">Exit</button>
+   </div>
     
-    <div id="stageDisplay">Stage: 1</div>
-    <div id="gameContainer">
-        <div id="maze"></div>
-    </div>
-    <div class="controls">
-        <div class="control-btn" id="up">↑</div>
-        <div class="control-btn" id="left">←</div>
-        <div class="control-btn" id="right">→</div>
-        <div class="control-btn" id="down">↓</div>
-    </div>
+   <div id="stageDisplay">Stage: 1</div>
+   <div id="gameContainer">
+       <div id="maze</div>
+   </div>
+   <div class="controls">
+       <div class="control-btn" id="up">↑</div>
+       <div class="control-btn" id="left">←</div>
+       <div class="control-btn" id="right">→</div>
+       <div class="control-btn" id="down">↓</div>
+   </div>
 
-    <audio id="backgroundMusic" loop>
-        <source src="background.mp3" type="audio/mpeg" />
-    </audio>
-    <audio id="horrorMusic" loop>
-        <source src="horror.mp3" type="audio/mpeg" />
-    </audio>
+   <audio id="backgroundMusic" loop>
+       <source src="background.mp3" type="audio/mpeg" />
+   </audio>
+   <audio id="horrorMusic" loop>
+       <source src="horror.mp3" type="audio/mpeg" />
+   </audio>
 
 <script>
 class MazeGame {
@@ -247,7 +246,21 @@ class MazeGame {
         this.updatePlayerPosition();
     }
 
-    this.moveMonster();
+    spawnMonster() {
+        // Ensure monster does not spawn on player
+        do {
+            this.monsterPos = {
+                x: Math.floor(Math.random() * this.mazeSize),
+                y: Math.floor(Math.random() * this.mazeSize)
+            };
+        } while (this.monsterPos.x === this.playerPos.x && this.monsterPos.y === this.playerPos.y);
+
+        this.updateMonsterPosition();
+        this.startHorrorMusic();
+
+        if (this.monsterInterval) clearInterval(this.monsterInterval);
+        this.monsterInterval = setInterval(() => {
+            this.moveMonster();
         }, 2000); // Monster moves slower (every 2 seconds)
     }
 
@@ -255,10 +268,18 @@ class MazeGame {
         const dx = this.playerPos.x - this.monsterPos.x;
         const dy = this.playerPos.y - this.monsterPos.y;
 
+        // Determine preferred direction
+        let stepX = 0, stepY = 0;
         if (Math.abs(dx) > Math.abs(dy)) {
-            this.monsterPos.x += dx > 0 ? 1 : -1;
+            stepX = dx > 0 ? 1 : -1;
         } else {
-            this.monsterPos.y += dy > 0 ? 1 : -1;
+            stepY = dy > 0 ? 1 : -1;
+        }
+
+        if (stepX !== 0 && this.canMonsterMove(stepX, 0)) {
+            this.monsterPos.x += stepX;
+        } else if (stepY !== 0 && this.canMonsterMove(0, stepY)) {
+            this.monsterPos.y += stepY;
         }
 
         this.updateMonsterPosition();
@@ -270,33 +291,23 @@ class MazeGame {
         }
     }
 
+    canMonsterMove(dx, dy) {
+        const newX = this.monsterPos.x + dx;
+        const newY = this.monsterPos.y + dy;
+        if (!this.isValidCell(newX, newY)) return false;
+        const cell = this.mazeGrid[this.monsterPos.y][this.monsterPos.x];
+        if (dx === 1 && cell.walls.right) return false;
+        if (dx === -1 && cell.walls.left) return false;
+        if (dy === 1 && cell.walls.bottom) return false;
+        if (dy === -1 && cell.walls.top) return false;
+        return true;
+    }
+
     updateMonsterPosition() {
         document.querySelectorAll('.monster').forEach(el => el.classList.remove('monster'));
         const index = this.monsterPos.y * this.mazeSize + this.monsterPos.x;
-        document.getElementById('maze').children[index].classList.add('monster');
-    }
-
-    getDistance(pos1, pos2) {
-        return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
-    }
-
-    startBackgroundMusic() {
-        const bgMusic = document.getElementById('backgroundMusic');
-        bgMusic.volume = 0.3;
-        bgMusic.play().catch(() => {});
-    }
-
-    startHorrorMusic() {
-        const bgMusic = document.getElementById('backgroundMusic');
-        const horrorMusic = document.getElementById('horrorMusic');
-        bgMusic.pause();
-        horrorMusic.volume = 0.4;
-        horrorMusic.play().catch(() => {});
-    }
-
-    stopHorrorMusic() {
-        const horrorMusic = document.getElementById('horrorMusic');
-        horrorMusic.pause();
+        if(document.getElementById('maze').children[index])
+            document.getElementById('maze').children[index].classList.add('monster');
     }
 
     getUnvisitedNeighbors(pos) {
@@ -345,8 +356,8 @@ class MazeGame {
         container.innerHTML = '';
         container.style.gridTemplateColumns = `repeat(${this.mazeSize}, 1fr)`;
 
-        for (let y = 0; y < this.mazeSize; y++) {
-            for (let x = 0; x < this.mazeSize; x++) {
+        for (let y = 0; y< this.mazeSize; y++) {
+            for (let x = 0; x< this.mazeSize; x++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
                 cell.style.borderTop = this.mazeGrid[y][x].walls.top ? '2px solid #222' : 'none';
@@ -389,9 +400,9 @@ class MazeGame {
 
         const currentCell = this.mazeGrid[this.playerPos.y][this.playerPos.x];
         if (x > this.playerPos.x && !currentCell.walls.right) return true;
-        if (x < this.playerPos.x && !currentCell.walls.left) return true;
+        if (x< this.playerPos.x && !currentCell.walls.left) return true;
         if (y > this.playerPos.y && !currentCell.walls.bottom) return true;
-        if (y < this.playerPos.y && !currentCell.walls.top) return true;
+        if (y< this.playerPos.y && !currentCell.walls.top) return true;
         return false;
     }
 
@@ -406,11 +417,11 @@ class MazeGame {
 
     updateFog() {
         const revealDistance = 2;
-        for (let y = 0; y < this.mazeSize; y++) {
-            for (let x = 0; x < this.mazeSize; x++) {
+        for (let y = 0; y< this.mazeSize; y++) {
+            for (let x = 0; x< this.mazeSize; x++) {
                 const distance = Math.abs(x - this.playerPos.x) +
                     Math.abs(y - this.playerPos.y);
-                if (distance <= revealDistance) {
+                if (distance<= revealDistance) {
                     this.mazeGrid[y][x].fog = false;
                     const fogElement = document.getElementById('maze')
                         .children[y * this.mazeSize + x]
@@ -462,7 +473,26 @@ class MazeGame {
     }
 
     isValidCell(x, y) {
-        return x >= 0 && x < this.mazeSize && y >= 0 && y < this.mazeSize;
+        return x >= 0 && x< this.mazeSize && y >= 0 && y< this.mazeSize;
+    }
+
+    startBackgroundMusic() {
+        const bgMusic = document.getElementById('backgroundMusic');
+        bgMusic.volume = 0.3;
+        bgMusic.play().catch(() => {});
+    }
+
+    startHorrorMusic() {
+        const bgMusic = document.getElementById('backgroundMusic');
+        const horrorMusic = document.getElementById('horrorMusic');
+        bgMusic.pause();
+        horrorMusic.volume = 0.4;
+        horrorMusic.play().catch(() => {});
+    }
+
+    stopHorrorMusic() {
+        const horrorMusic = document.getElementById('horrorMusic');
+        horrorMusic.pause();
     }
 }
 
@@ -470,4 +500,3 @@ new MazeGame();
 </script>
 </body>
 </html>
-
