@@ -131,7 +131,7 @@
             height: 100%;
             background: #000;
             color: white;
-            font-family: Arial, sans-serif;
+            font-family: Arial;
             font-size: 2em;
             z-index: 10;
             user-select: none;
@@ -152,26 +152,7 @@
         #menu button:hover {
             background: #45a049;
         }
-
-        /* Responsive fix for small height screens */
-        @media(max-height: 600px) {
-            #gameContainer {
-                max-height: 100vh;
-                height: 90vmin;
-            }
-            .controls {
-                bottom: 10px;
-                width: 160px;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 8px;
-            }
-            .control-btn {
-                width: 50px;
-                height: 50px;
-                font-size: 20px;
-            }
-        }
-    </style>
+   </style>
 </head>
 <body>
     <div id="menu">
@@ -218,7 +199,6 @@ class MazeGame {
         document.getElementById('playButton').addEventListener('click', () => this.startGame());
         document.getElementById('exitButton').addEventListener('click', () => this.exitGame());
 
-        // Control buttons touch/click
         ['up','down','left','right'].forEach(dir => {
             const btn = document.getElementById(dir);
             const moves = {up:[0,-1], down:[0,1], left:[-1,0], right:[1,0]};
@@ -251,7 +231,7 @@ class MazeGame {
     }
 
     generateMaze() {
-        this.mazeSize = 5 + this.currentStage * 2;
+        this.mazeSize = 10 + this.currentStage * 2;
         this.mazeGrid = Array(this.mazeSize).fill(null).map(() =>
             Array(this.mazeSize).fill(null).map(() => ({
                 walls: {top:true, right:true, bottom:true, left:true},
@@ -301,25 +281,62 @@ class MazeGame {
 
         this.monsterInterval = setInterval(() => {
             this.moveMonster();
-        }, 2000);
+        }, 1000);
     }
 
     moveMonster() {
+        // Log to verify movement
+        // console.log('Monster position:', this.monsterPos);
+
         const dx = this.playerPos.x - this.monsterPos.x;
         const dy = this.playerPos.y - this.monsterPos.y;
 
-        let stepX = 0, stepY = 0;
-        if (Math.abs(dx) > Math.abs(dy)) {
-            stepX = dx > 0 ? 1 : -1;
-        } else {
-            stepY = dy > 0 ? 1 : -1;
+        // Possible directions sorted by closeness to player
+        const directions = [
+            {dx: dx > 0 ? 1 : -1, dy: 0},
+            {dx: 0, dy: dy > 0 ? 1 : -1}
+        ];
+
+        // Try to move along the direction of greatest absolute difference first, then second
+        // Or if blocked, try the other direction.
+
+        let moved = false;
+
+        for (let dir of directions) {
+            if ((dir.dx !== 0 || dir.dy !== 0) && this.canMonsterMove(dir.dx, dir.dy)) {
+                this.monsterPos.x += dir.dx;
+                this.monsterPos.y += dir.dy;
+                moved = true;
+                break;
+            }
         }
 
-        if (stepX !== 0 && this.canMonsterMove(stepX, 0)) {
-            this.monsterPos.x += stepX;
-        } else if (stepY !== 0 && this.canMonsterMove(0, stepY)) {
-            this.monsterPos.y += stepY;
+        // If cannot move towards player, try all directions randomly for some movement
+        if (!moved) {
+            const allDirs = [
+                {dx:1, dy:0},
+                {dx:-1, dy:0},
+                {dx:0, dy:1},
+                {dx:0, dy:-1}
+            ];
+
+            // Shuffle for randomness
+            for (let i = allDirs.length -1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i+1));
+                [allDirs[i], allDirs[j]] = [allDirs[j], allDirs[i]];
+            }
+
+            for (let dir of allDirs) {
+                if (this.canMonsterMove(dir.dx, dir.dy)) {
+                    this.monsterPos.x += dir.dx;
+                    this.monsterPos.y += dir.dy;
+                    moved = true;
+                    break;
+                }
+            }
         }
+
+        // If still no movement possible, monster stays in place.
 
         this.updateMonsterPosition();
 
@@ -335,10 +352,12 @@ class MazeGame {
         const newY = this.monsterPos.y + dy;
         if (!this.isValidCell(newX, newY)) return false;
         const cell = this.mazeGrid[this.monsterPos.y][this.monsterPos.x];
+
         if (dx === 1 && cell.walls.right) return false;
         if (dx === -1 && cell.walls.left) return false;
         if (dy === 1 && cell.walls.bottom) return false;
         if (dy === -1 && cell.walls.top) return false;
+
         return true;
     }
 
@@ -501,7 +520,7 @@ class MazeGame {
         bgMusic.volume = 0.3;
         const playPromise = bgMusic.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => {/* autoplay blocked, ignore */});
+            playPromise.catch(() => {});
         }
     }
 
@@ -512,7 +531,7 @@ class MazeGame {
         horrorMusic.volume = 0.4;
         const playPromise = horrorMusic.play();
         if (playPromise !== undefined) {
-            playPromise.catch(e => {/* autoplay blocked, ignore */});
+            playPromise.catch(() => {});
         }
     }
 
@@ -523,7 +542,6 @@ class MazeGame {
 }
 
 new MazeGame();
-
 </script>
 </body>
 </html>
