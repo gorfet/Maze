@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Veilbound Labyrinth</title>
+    <title>Camille's Labyrinth</title>
     <style>
         body {
             margin: 0;
@@ -247,22 +247,8 @@ class MazeGame {
         this.updatePlayerPosition();
     }
 
-    spawnMonster() {
-        // Ensure monster does not spawn on player
-        do {
-            this.monsterPos = {
-                x: Math.floor(Math.random() * this.mazeSize),
-                y: Math.floor(Math.random() * this.mazeSize)
-            };
-        } while (this.monsterPos.x === this.playerPos.x && this.monsterPos.y === this.playerPos.y);
-
-        this.updateMonsterPosition();
-        this.startHorrorMusic();
-
-        if (this.monsterInterval) clearInterval(this.monsterInterval);
-        this.monsterInterval = setInterval(() => {
-            this.moveMonster();
-        }, 500);
+    this.moveMonster();
+        }, 2000); // Monster moves slower (every 2 seconds)
     }
 
     moveMonster() {
@@ -270,17 +256,9 @@ class MazeGame {
         const dy = this.playerPos.y - this.monsterPos.y;
 
         if (Math.abs(dx) > Math.abs(dy)) {
-            const stepX = dx > 0 ? 1 : -1;
-            if (this.isValidCell(this.monsterPos.x + stepX, this.monsterPos.y) &&
-                !this.mazeGrid[this.monsterPos.y][this.monsterPos.x].walls[stepX > 0 ? 'right' : 'left']) {
-                this.monsterPos.x += stepX;
-            }
+            this.monsterPos.x += dx > 0 ? 1 : -1;
         } else {
-            const stepY = dy > 0 ? 1 : -1;
-            if (this.isValidCell(this.monsterPos.x, this.monsterPos.y + stepY) &&
-                !this.mazeGrid[this.monsterPos.y][this.monsterPos.x].walls[stepY > 0 ? 'bottom' : 'top']) {
-                this.monsterPos.y += stepY;
-            }
+            this.monsterPos.y += dy > 0 ? 1 : -1;
         }
 
         this.updateMonsterPosition();
@@ -295,8 +273,11 @@ class MazeGame {
     updateMonsterPosition() {
         document.querySelectorAll('.monster').forEach(el => el.classList.remove('monster'));
         const index = this.monsterPos.y * this.mazeSize + this.monsterPos.x;
-        if(document.getElementById('maze').children[index])
-            document.getElementById('maze').children[index].classList.add('monster');
+        document.getElementById('maze').children[index].classList.add('monster');
+    }
+
+    getDistance(pos1, pos2) {
+        return Math.abs(pos1.x - pos2.x) + Math.abs(pos1.y - pos2.y);
     }
 
     startBackgroundMusic() {
