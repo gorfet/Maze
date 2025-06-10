@@ -2,11 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Labyrinth Descent: Enhanced Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Labyrinth Descent: Mobile Edition</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap');
+        
+        :root {
+            --cell-size: 28px;
+            --maze-size: 15;
+        }
         
         body {
             margin: 0;
@@ -14,6 +20,9 @@
             overflow: hidden;
             font-family: 'Roboto', sans-serif;
             background-color: #000;
+            touch-action: none;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
         }
         
         .title {
@@ -127,20 +136,23 @@
             left: 50%;
             transform: translateX(-50%);
             z-index: 10;
-            display: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
         }
         
         .control-btn {
-            width: 60px;
-            height: 60px;
+            width: 65px;
+            height: 65px;
             background-color: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 24px;
+            font-size: 28px;
             color: white;
-            margin: 5px;
+            margin: 0 5px;
             user-select: none;
             pointer-events: auto;
             backdrop-filter: blur(5px);
@@ -151,6 +163,12 @@
         .control-btn:active {
             background-color: rgba(0, 200, 255, 0.4);
             transform: scale(0.95);
+        }
+        
+        .directional-controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
         }
         
         .game-over, .level-complete, .pause-screen {
@@ -174,6 +192,8 @@
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
+            border: none;
+            outline: none;
         }
         
         .btn:before {
@@ -218,10 +238,10 @@
         
         .mini-map {
             position: absolute;
-            bottom: 20px;
-            right: 20px;
-            width: 150px;
-            height: 150px;
+            bottom: 110px;
+            right: 15px;
+            width: 120px;
+            height: 120px;
             background-color: rgba(0, 0, 0, 0.7);
             border: 2px solid #333;
             border-radius: 5px;
@@ -293,6 +313,7 @@
             opacity: 0;
             transition: opacity 0.3s ease;
             text-align: center;
+            max-width: 90%;
         }
         
         @keyframes pulse-trap {
@@ -335,19 +356,141 @@
             100% { background-color: rgba(255, 0, 0, 0); }
         }
         
-        /* Mobile responsiveness */
-        @media (max-width: 768px) {
-            .controls {
-                display: flex;
-                flex-wrap: wrap;
-                width: 180px;
-                justify-content: center;
+        /* Mobile enhancements */
+        .mobile-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 15px;
+            background: rgba(0, 0, 0, 0.7);
+            border-bottom: 1px solid #333;
+        }
+        
+        .mobile-stats {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .stat-box {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 5px 10px;
+            text-align: center;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 18px;
+        }
+        
+        /* Touch joystick */
+        .joystick-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 120px;
+            height: 120px;
+            z-index: 10;
+        }
+        
+        .joystick-base {
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .joystick-handle {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 200, 255, 0.3);
+            border-radius: 50%;
+            position: absolute;
+            transition: transform 0.1s ease;
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
+        }
+        
+        /* Swipe area */
+        .swipe-area {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 70%;
+            z-index: 5;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            :root {
+                --cell-size: 24px;
             }
             
             .mini-map {
                 width: 100px;
                 height: 100px;
                 bottom: 100px;
+            }
+            
+            .joystick-container {
+                width: 100px;
+                height: 100px;
+            }
+            
+            .joystick-handle {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .control-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 24px;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            :root {
+                --cell-size: 22px;
+            }
+            
+            .mobile-stats {
+                gap: 8px;
+            }
+            
+            .stat-box {
+                padding: 4px 8px;
+            }
+            
+            .stat-value {
+                font-size: 16px;
             }
         }
     </style>
@@ -359,8 +502,8 @@
             <div id="particleContainer" class="w-full h-full"></div>
         </div>
         
-        <h1 class="title text-5xl md:text-7xl mb-8 text-red-500 z-10">Labyrinth Descent</h1>
-        <div class="w-64 h-64 md:w-80 md:h-80 relative mb-8 z-10">
+        <h1 class="title text-5xl md:text-6xl mb-6 text-red-500 z-10">Labyrinth Descent</h1>
+        <div class="w-56 h-56 relative mb-6 z-10">
             <svg class="w-full h-full" viewBox="0 0 100 100">
                 <!-- Maze background -->
                 <defs>
@@ -400,16 +543,16 @@
             </button>
             <div class="text-center max-w-md px-4">
                 <p class="mb-2 text-gray-300">Navigate through endless mazes while avoiding traps and a relentless monster.</p>
-                <p class="text-sm text-gray-400">Use arrow keys or on-screen controls to move.</p>
+                <p class="text-sm text-gray-400">Use the on-screen controls to move.</p>
             </div>
         </div>
     </div>
 
     <!-- How To Play Screen -->
     <div id="howToPlayScreen" class="home-screen flex flex-col items-center justify-center" style="display: none;">
-        <h1 class="title text-4xl md:text-5xl mb-8 text-red-500">How To Play</h1>
-        <div class="bg-gray-900 bg-opacity-70 p-6 rounded-lg max-w-lg">
-            <ul class="list-disc pl-5 space-y-3">
+        <h1 class="title text-3xl md:text-4xl mb-6 text-red-500">How To Play</h1>
+        <div class="bg-gray-900 bg-opacity-70 p-5 rounded-lg max-w-md mx-4">
+            <ul class="list-disc pl-5 space-y-3 text-sm md:text-base">
                 <li><span class="text-blue-400">Goal:</span> Find the exit (green glow) to advance to the next floor.</li>
                 <li><span class="text-red-400">Danger:</span> Avoid the monster that will chase you when you're visible.</li>
                 <li><span class="text-orange-400">Traps:</span> Red glowing areas will alert the monster to your location.</li>
@@ -418,78 +561,72 @@
                 <li><span class="text-purple-400">Difficulty:</span> Each floor gets progressively harder with faster monsters and more traps.</li>
             </ul>
             <div class="mt-6 flex justify-center">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-3">
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-blue-500 rounded-full mr-2"></div>
+                        <div class="w-6 h-6 bg-blue-500 rounded-full mr-2"></div>
                         <span>Player</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-red-500 rounded-full mr-2"></div>
+                        <div class="w-6 h-6 bg-red-500 rounded-full mr-2"></div>
                         <span>Monster</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-green-500 rounded-full mr-2"></div>
+                        <div class="w-6 h-6 bg-green-500 rounded-full mr-2"></div>
                         <span>Exit</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-orange-500 rounded-full mr-2"></div>
+                        <div class="w-6 h-6 bg-orange-500 rounded-full mr-2"></div>
                         <span>Trap</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-yellow-500 rounded-full mr-2"></div>
+                        <div class="w-6 h-6 bg-yellow-500 rounded-full mr-2"></div>
                         <span>Power-up</span>
                     </div>
                     <div class="flex items-center">
-                        <div class="w-8 h-8 bg-gray-800 rounded-full mr-2"></div>
+                        <div class="w-6 h-6 bg-gray-800 rounded-full mr-2"></div>
                         <span>Fog</span>
                     </div>
                 </div>
             </div>
         </div>
-        <button id="backBtn" class="btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-full text-lg mt-8">
+        <button id="backBtn" class="btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-full text-lg mt-6">
             BACK
         </button>
     </div>
 
     <!-- Game Container -->
     <div id="gameContainer" class="game-container hidden">
-        <div id="maze" class="maze"></div>
-        
-        <!-- Game UI -->
-        <div class="game-ui">
-            <div class="flex justify-between items-center">
-                <div class="bg-black bg-opacity-70 p-2 rounded-lg flex items-center">
-                    <div class="mr-4">
-                        <span class="text-sm game-font">FLOOR</span>
-                        <span id="floorLevel" class="ml-2 font-bold game-font">1</span>
-                    </div>
-                    <div>
-                        <span class="text-sm game-font">SCORE</span>
-                        <span id="scoreValue" class="ml-2 font-bold game-font">0</span>
-                    </div>
+        <!-- Mobile Header -->
+        <div class="mobile-header">
+            <div class="mobile-stats">
+                <div class="stat-box">
+                    <div class="stat-label">FLOOR</div>
+                    <div id="floorLevel" class="stat-value">1</div>
                 </div>
-                <div class="flex">
-                    <div id="mapBtn" class="btn bg-black bg-opacity-70 p-2 rounded-lg mr-2 pointer-events-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                    </div>
-                    <div id="pauseBtn" class="btn bg-black bg-opacity-70 p-2 rounded-lg pointer-events-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
+                <div class="stat-box">
+                    <div class="stat-label">SCORE</div>
+                    <div id="scoreValue" class="stat-value">0</div>
                 </div>
             </div>
-            
-            <!-- Power-up indicator -->
-            <div id="powerupIndicator" class="fixed top-16 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 px-4 py-2 rounded-full hidden">
-                <div class="flex items-center">
-                    <div id="powerupIcon" class="w-6 h-6 mr-2 rounded-full bg-yellow-500"></div>
-                    <span id="powerupName" class="mr-2 game-font">Speed Boost</span>
-                    <div class="progress-container w-24">
-                        <div id="powerupProgress" class="progress-bar" style="width: 100%"></div>
-                    </div>
+            <div class="action-buttons">
+                <div id="mapBtn" class="action-btn pointer-events-auto">
+                    <i class="fas fa-map"></i>
+                </div>
+                <div id="pauseBtn" class="action-btn pointer-events-auto">
+                    <i class="fas fa-pause"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div id="maze" class="maze"></div>
+        
+        <!-- Power-up indicator -->
+        <div id="powerupIndicator" class="fixed top-16 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 px-4 py-2 rounded-full hidden">
+            <div class="flex items-center">
+                <div id="powerupIcon" class="w-6 h-6 mr-2 rounded-full bg-yellow-500"></div>
+                <span id="powerupName" class="mr-2 game-font">Speed Boost</span>
+                <div class="progress-container w-24">
+                    <div id="powerupProgress" class="progress-bar" style="width: 100%"></div>
                 </div>
             </div>
         </div>
@@ -504,13 +641,31 @@
         
         <!-- Mobile Controls -->
         <div class="controls">
-            <div class="control-btn" id="upBtn">↑</div>
-            <div class="flex">
-                <div class="control-btn" id="leftBtn">←</div>
-                <div class="control-btn" id="rightBtn">→</div>
+            <div class="control-btn" id="upBtn">
+                <i class="fas fa-arrow-up"></i>
             </div>
-            <div class="control-btn" id="downBtn">↓</div>
+            <div class="directional-controls">
+                <div class="control-btn" id="leftBtn">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <div class="control-btn" id="rightBtn">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </div>
+            <div class="control-btn" id="downBtn">
+                <i class="fas fa-arrow-down"></i>
+            </div>
         </div>
+        
+        <!-- Touch Joystick -->
+        <div class="joystick-container" id="joystickContainer">
+            <div class="joystick-base">
+                <div class="joystick-handle" id="joystickHandle"></div>
+            </div>
+        </div>
+        
+        <!-- Swipe Area -->
+        <div class="swipe-area" id="swipeArea"></div>
         
         <!-- Game Over Screen -->
         <div id="gameOver" class="game-over">
@@ -578,12 +733,13 @@
             lastUpdate: 0,
             monsterSpeed: 0.7, // Relative to player speed
             monsterUpdateCounter: 0,
-            isMobile: false,
             miniMapVisible: false,
             activePowerup: null,
             powerupTimer: 0,
             powerupDuration: 10000, // 10 seconds
-            particles: []
+            particles: [],
+            joystickActive: false,
+            joystickDirection: { x: 0, y: 0 }
         };
 
         // DOM Elements
@@ -609,6 +765,9 @@
         const powerupProgress = document.getElementById('powerupProgress');
         const notification = document.getElementById('notification');
         const particleContainer = document.getElementById('particleContainer');
+        const joystickHandle = document.getElementById('joystickHandle');
+        const joystickContainer = document.getElementById('joystickContainer');
+        const swipeArea = document.getElementById('swipeArea');
 
         // Character SVG
         const characterSVG = `
@@ -782,11 +941,6 @@
             }
         }
         
-        // Create particles and start animations
-        createParticles();
-        animateParticles();
-        animateHomeScreen();
-
         // Show notification
         function showNotification(message, duration = 3000) {
             notification.textContent = message;
@@ -799,32 +953,174 @@
 
         // Initialize the game
         function initGame() {
-            state.isMobile = window.innerWidth < 768;
-            state.cellSize = calculateCellSize();
+            state.cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
             state.playerSpeed = 1;
             resetGame();
             
-            // Event listeners
-            window.addEventListener('keydown', handleKeyDown);
-            window.addEventListener('keyup', handleKeyUp);
-            window.addEventListener('resize', handleResize);
+            // Event listeners for mobile controls
+            document.getElementById('upBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                state.keysPressed.ArrowUp = true;
+            });
+            document.getElementById('leftBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                state.keysPressed.ArrowLeft = true;
+            });
+            document.getElementById('rightBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                state.keysPressed.ArrowRight = true;
+            });
+            document.getElementById('downBtn').addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                state.keysPressed.ArrowDown = true;
+            });
             
-            // Mobile controls
-            document.getElementById('upBtn').addEventListener('touchstart', () => state.keysPressed.ArrowUp = true);
-            document.getElementById('leftBtn').addEventListener('touchstart', () => state.keysPressed.ArrowLeft = true);
-            document.getElementById('rightBtn').addEventListener('touchstart', () => state.keysPressed.ArrowRight = true);
-            document.getElementById('downBtn').addEventListener('touchstart', () => state.keysPressed.ArrowDown = true);
-            
-            document.getElementById('upBtn').addEventListener('touchend', () => state.keysPressed.ArrowUp = false);
-            document.getElementById('leftBtn').addEventListener('touchend', () => state.keysPressed.ArrowLeft = false);
-            document.getElementById('rightBtn').addEventListener('touchend', () => state.keysPressed.ArrowRight = false);
-            document.getElementById('downBtn').addEventListener('touchend', () => state.keysPressed.ArrowDown = false);
+            document.getElementById('upBtn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                state.keysPressed.ArrowUp = false;
+            });
+            document.getElementById('leftBtn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                state.keysPressed.ArrowLeft = false;
+            });
+            document.getElementById('rightBtn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                state.keysPressed.ArrowRight = false;
+            });
+            document.getElementById('downBtn').addEventListener('touchend', (e) => {
+                e.preventDefault();
+                state.keysPressed.ArrowDown = false;
+            });
             
             // Map button
             document.getElementById('mapBtn').addEventListener('click', toggleMiniMap);
             
+            // Joystick touch events
+            initJoystick();
+            
+            // Swipe area for directional controls
+            initSwipeControls();
+            
             // Start game loop
             requestAnimationFrame(gameLoop);
+        }
+
+        // Initialize joystick controls
+        function initJoystick() {
+            let touchId = null;
+            
+            joystickContainer.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                if (touchId !== null) return;
+                
+                const touch = e.changedTouches[0];
+                touchId = touch.identifier;
+                state.joystickActive = true;
+                updateJoystickPosition(touch.clientX, touch.clientY);
+            });
+            
+            document.addEventListener('touchmove', (e) => {
+                if (!state.joystickActive) return;
+                
+                for (const touch of e.changedTouches) {
+                    if (touch.identifier === touchId) {
+                        e.preventDefault();
+                        updateJoystickPosition(touch.clientX, touch.clientY);
+                        break;
+                    }
+                }
+            });
+            
+            document.addEventListener('touchend', (e) => {
+                if (!state.joystickActive) return;
+                
+                for (const touch of e.changedTouches) {
+                    if (touch.identifier === touchId) {
+                        e.preventDefault();
+                        resetJoystick();
+                        touchId = null;
+                        break;
+                    }
+                }
+            });
+        }
+        
+        function updateJoystickPosition(x, y) {
+            const rect = joystickContainer.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            
+            const dx = x - centerX;
+            const dy = y - centerY;
+            const distance = Math.min(Math.sqrt(dx * dx + dy * dy), rect.width / 2);
+            
+            const angle = Math.atan2(dy, dx);
+            const moveX = Math.cos(angle) * distance;
+            const moveY = Math.sin(angle) * distance;
+            
+            joystickHandle.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            
+            // Determine direction
+            state.joystickDirection = { x: 0, y: 0 };
+            
+            if (distance > 20) {
+                if (Math.abs(angle) > Math.PI * 3/4 || Math.abs(angle) < Math.PI * 1/4) {
+                    state.joystickDirection.x = Math.cos(angle) > 0 ? 1 : -1;
+                }
+                
+                if (Math.abs(angle) > Math.PI * 1/4 && Math.abs(angle) < Math.PI * 3/4) {
+                    state.joystickDirection.y = Math.sin(angle) > 0 ? 1 : -1;
+                }
+            }
+        }
+        
+        function resetJoystick() {
+            joystickHandle.style.transform = 'translate(0, 0)';
+            state.joystickActive = false;
+            state.joystickDirection = { x: 0, y: 0 };
+        }
+        
+        // Initialize swipe controls
+        function initSwipeControls() {
+            let touchStartX = 0;
+            let touchStartY = 0;
+            
+            swipeArea.addEventListener('touchstart', (e) => {
+                const touch = e.touches[0];
+                touchStartX = touch.clientX;
+                touchStartY = touch.clientY;
+            });
+            
+            swipeArea.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            });
+            
+            swipeArea.addEventListener('touchend', (e) => {
+                const touch = e.changedTouches[0];
+                const diffX = touch.clientX - touchStartX;
+                const diffY = touch.clientY - touchStartY;
+                
+                // Determine primary direction
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    // Horizontal swipe
+                    if (diffX > 50) {
+                        state.keysPressed.ArrowRight = true;
+                        setTimeout(() => state.keysPressed.ArrowRight = false, 200);
+                    } else if (diffX < -50) {
+                        state.keysPressed.ArrowLeft = true;
+                        setTimeout(() => state.keysPressed.ArrowLeft = false, 200);
+                    }
+                } else {
+                    // Vertical swipe
+                    if (diffY > 50) {
+                        state.keysPressed.ArrowDown = true;
+                        setTimeout(() => state.keysPressed.ArrowDown = false, 200);
+                    } else if (diffY < -50) {
+                        state.keysPressed.ArrowUp = true;
+                        setTimeout(() => state.keysPressed.ArrowUp = false, 200);
+                    }
+                }
+            });
         }
 
         // Toggle mini-map
@@ -889,24 +1185,6 @@
             }
         }
 
-        // Calculate cell size based on screen dimensions
-        function calculateCellSize() {
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            const minDimension = Math.min(screenWidth, screenHeight);
-            return Math.floor(minDimension / (state.mazeSize + 2));
-        }
-
-        // Handle window resize
-        function handleResize() {
-            state.cellSize = calculateCellSize();
-            state.isMobile = window.innerWidth < 768;
-            renderMaze();
-            if (state.miniMapVisible) {
-                updateMiniMap();
-            }
-        }
-
         // Reset game state for a new game or level
         function resetGame(nextFloor = false) {
             if (!nextFloor) {
@@ -934,7 +1212,7 @@
             
             // Generate new maze with size based on floor
             state.mazeSize = Math.min(15 + Math.floor(state.currentFloor / 3), 25);
-            state.cellSize = calculateCellSize();
+            state.cellSize = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--cell-size'));
             generateMaze();
             
             // Place player at start
@@ -1164,12 +1442,13 @@
         // Render the maze
         function renderMaze() {
             mazeElement.innerHTML = '';
-            mazeElement.style.width = `${state.mazeSize * state.cellSize}px`;
-            mazeElement.style.height = `${state.mazeSize * state.cellSize}px`;
+            const mazeSizePx = state.mazeSize * state.cellSize;
+            mazeElement.style.width = `${mazeSizePx}px`;
+            mazeElement.style.height = `${mazeSizePx}px`;
             
             // Center the maze
-            const offsetX = (window.innerWidth - state.mazeSize * state.cellSize) / 2;
-            const offsetY = (window.innerHeight - state.mazeSize * state.cellSize) / 2;
+            const offsetX = (window.innerWidth - mazeSizePx) / 2;
+            const offsetY = (window.innerHeight - mazeSizePx) / 2;
             mazeElement.style.left = `${offsetX}px`;
             mazeElement.style.top = `${offsetY}px`;
             
@@ -1541,28 +1820,6 @@
             }, 2000);
         }
 
-        // Handle key down
-        function handleKeyDown(e) {
-            if (state.paused) return;
-            
-            state.keysPressed[e.key] = true;
-            
-            // Toggle mini-map with 'M' key
-            if (e.key === 'm' || e.key === 'M') {
-                toggleMiniMap();
-            }
-            
-            // Pause with 'P' key or Escape
-            if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
-                togglePause();
-            }
-        }
-
-        // Handle key up
-        function handleKeyUp(e) {
-            state.keysPressed[e.key] = false;
-        }
-
         // Toggle pause
         function togglePause() {
             state.paused = !state.paused;
@@ -1597,22 +1854,34 @@
                 // Update powerup timer
                 updatePowerupTimer(deltaTime);
                 
-                // Update player position based on keys pressed
+                // Update player position based on keys pressed or joystick
                 if (deltaTime > 0) {
                     const moveInterval = 150 / (state.playerSpeed || 1); // ms between moves
                     
                     if (timestamp - state.lastMoveTime > moveInterval) {
-                        if (state.keysPressed.ArrowUp) {
+                        let moved = false;
+                        
+                        // Joystick movement has priority
+                        if (state.joystickDirection.x !== 0 || state.joystickDirection.y !== 0) {
+                            updatePlayerPosition(state.joystickDirection.x, state.joystickDirection.y);
+                            moved = true;
+                        } 
+                        // Then check arrow keys
+                        else if (state.keysPressed.ArrowUp) {
                             updatePlayerPosition(0, -1);
-                            state.lastMoveTime = timestamp;
+                            moved = true;
                         } else if (state.keysPressed.ArrowDown) {
                             updatePlayerPosition(0, 1);
-                            state.lastMoveTime = timestamp;
+                            moved = true;
                         } else if (state.keysPressed.ArrowLeft) {
                             updatePlayerPosition(-1, 0);
-                            state.lastMoveTime = timestamp;
+                            moved = true;
                         } else if (state.keysPressed.ArrowRight) {
                             updatePlayerPosition(1, 0);
+                            moved = true;
+                        }
+                        
+                        if (moved) {
                             state.lastMoveTime = timestamp;
                         }
                     }
@@ -1702,6 +1971,11 @@
             state.gameStarted = false;
             state.paused = false;
         });
+
+        // Create particles and start animations
+        createParticles();
+        animateParticles();
+        animateHomeScreen();
     </script>
 </body>
 </html>
