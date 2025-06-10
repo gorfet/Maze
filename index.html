@@ -1,492 +1,1707 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Labyrinth</title>
-<style>
-  /* Reset and base */
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
-  body {
-    margin: 0;
-    background: #fff;
-    color: #6b7280;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 18px;
-    line-height: 1.6;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  main {
-    max-width: 1200px;
-    margin: 2rem auto 4rem;
-    padding: 0 1rem;
-  }
-  h1 {
-    font-weight: 700;
-    font-size: 3rem;
-    color: #111827;
-    margin-bottom: 0.5rem;
-  }
-  p {
-    margin-top: 0.5rem;
-    color: #4b5563;
-  }
-  button {
-    background: #000;
-    color: #fff;
-    border: none;
-    border-radius: 0.75rem;
-    padding: 12px 28px;
-    font-size: 16px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin: 0.5rem 0.75rem 0.5rem 0;
-  }
-  button:hover,
-  button:focus {
-    background: #374151;
-    outline: none;
-  }
-  #menu {
-    background: #f9fafb;
-    border-radius: 0.75rem;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
-    padding: 2rem 3rem;
-    text-align: center;
-    margin-bottom: 2rem;
-  }
-  #menu p {
-    font-weight: 600;
-    font-size: 20px;
-    color: #111827;
-  }
-  #gameContainer {
-    display: block;
-    margin: 0 auto;
-    background: #eee;
-    border-radius: 0.75rem;
-    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-    max-width: 100vw;
-  }
-  #fullscreenBtn {
-    position: fixed;
-    bottom: 24px;
-    right: 24px;
-    background: #000;
-    border-radius: 50%;
-    width: 48px;
-    height: 48px;
-    font-size: 24px;
-    line-height: 48px;
-    text-align: center;
-  }
-  #fullscreenBtn:hover,
-  #fullscreenBtn:focus {
-    background: #374151;
-    outline: none;
-  }
-  /* Responsive */
-  @media (max-width: 600px) {
-    #menu {
-      padding: 1.5rem 1.5rem;
-    }
-    h1 {
-      font-size: 2rem;
-    }
-    button {
-      width: 100%;
-      margin: 0 0 1rem 0;
-    }
-  }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labyrinth Descent: Enhanced Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Creepster&family=Orbitron:wght@400;700&family=Roboto:wght@400;700&display=swap');
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Roboto', sans-serif;
+            background-color: #000;
+        }
+        
+        .title {
+            font-family: 'Creepster', cursive;
+            text-shadow: 2px 2px 8px rgba(255, 0, 0, 0.6);
+        }
+        
+        .game-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+        
+        .home-screen {
+            background-image: radial-gradient(circle at center, #1a1a2e 0%, #16213e 50%, #0f0f0f 100%);
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            z-index: 100;
+            transition: opacity 1s ease-in-out;
+        }
+        
+        .game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background-color: #0a0a0a;
+        }
+        
+        .maze {
+            position: relative;
+            margin: 0 auto;
+            transition: transform 0.5s ease-out;
+        }
+        
+        .cell {
+            position: absolute;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
+        }
+        
+        .wall {
+            background-color: #333;
+            border: 1px solid #444;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+        
+        .path {
+            background-color: #111;
+            border: 1px solid #222;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .fog {
+            background-color: #000;
+            position: absolute;
+            z-index: 2;
+            transition: opacity 0.5s ease;
+        }
+        
+        .player {
+            position: absolute;
+            z-index: 5;
+            transition: all 0.2s ease;
+            filter: drop-shadow(0 0 10px rgba(0, 200, 255, 0.8));
+        }
+        
+        .monster {
+            position: absolute;
+            z-index: 4;
+            transition: all 0.3s ease;
+            filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8));
+        }
+        
+        .trap {
+            position: absolute;
+            z-index: 3;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,87,34,0.7) 0%, rgba(0,0,0,0) 70%);
+            animation: pulse-trap 3s infinite;
+        }
+        
+        .exit {
+            position: absolute;
+            z-index: 3;
+            background: radial-gradient(circle, rgba(0,255,0,0.7) 0%, rgba(0,0,0,0) 70%);
+            border-radius: 50%;
+            animation: pulse-exit 2s infinite;
+        }
+        
+        .powerup {
+            position: absolute;
+            z-index: 3;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255,215,0,0.7) 0%, rgba(0,0,0,0) 70%);
+            animation: pulse-powerup 2s infinite;
+        }
+        
+        .game-ui {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: none;
+        }
+        
+        .control-btn {
+            width: 60px;
+            height: 60px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            color: white;
+            margin: 5px;
+            user-select: none;
+            pointer-events: auto;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+        
+        .control-btn:active {
+            background-color: rgba(0, 200, 255, 0.4);
+            transform: scale(0.95);
+        }
+        
+        .game-over, .level-complete, .pause-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 20;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+        
+        .btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn:before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover:before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px rgba(0, 200, 255, 0.7);
+        }
+        
+        .btn:active {
+            transform: scale(0.95);
+        }
+        
+        .progress-container {
+            width: 100%;
+            height: 8px;
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background-color: #00ccff;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        .mini-map {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            width: 150px;
+            height: 150px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px solid #333;
+            border-radius: 5px;
+            z-index: 10;
+            overflow: hidden;
+            display: none;
+        }
+        
+        .mini-map-content {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .mini-map-cell {
+            position: absolute;
+            box-sizing: border-box;
+        }
+        
+        .mini-map-wall {
+            background-color: #555;
+        }
+        
+        .mini-map-path {
+            background-color: #222;
+        }
+        
+        .mini-map-player {
+            background-color: #00ccff;
+            border-radius: 50%;
+            z-index: 2;
+        }
+        
+        .mini-map-monster {
+            background-color: #ff3333;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .mini-map-exit {
+            background-color: #00ff00;
+            border-radius: 50%;
+            z-index: 1;
+        }
+        
+        .stats {
+            position: absolute;
+            top: 60px;
+            left: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 5px;
+            padding: 10px;
+            color: white;
+            font-size: 14px;
+            z-index: 10;
+        }
+        
+        .notification {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 16px;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            text-align: center;
+        }
+        
+        @keyframes pulse-trap {
+            0% { opacity: 0.3; }
+            50% { opacity: 0.8; }
+            100% { opacity: 0.3; }
+        }
+        
+        @keyframes pulse-exit {
+            0% { opacity: 0.5; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1.1); }
+            100% { opacity: 0.5; transform: scale(0.9); }
+        }
+        
+        @keyframes pulse-powerup {
+            0% { opacity: 0.5; transform: scale(0.9) rotate(0deg); }
+            50% { opacity: 1; transform: scale(1.1) rotate(180deg); }
+            100% { opacity: 0.5; transform: scale(0.9) rotate(360deg); }
+        }
+        
+        @keyframes shake {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-5px, -5px) rotate(-5deg); }
+            50% { transform: translate(5px, 5px) rotate(5deg); }
+            75% { transform: translate(-5px, 5px) rotate(-5deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+        
+        .shake {
+            animation: shake 0.5s;
+        }
+        
+        .flash {
+            animation: flash 0.5s;
+        }
+        
+        @keyframes flash {
+            0% { background-color: rgba(255, 0, 0, 0); }
+            50% { background-color: rgba(255, 0, 0, 0.3); }
+            100% { background-color: rgba(255, 0, 0, 0); }
+        }
+        
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .controls {
+                display: flex;
+                flex-wrap: wrap;
+                width: 180px;
+                justify-content: center;
+            }
+            
+            .mini-map {
+                width: 100px;
+                height: 100px;
+                bottom: 100px;
+            }
+        }
+    </style>
 </head>
-<body>
-  <main>
-    <section id="menu" role="region" aria-label="Game menu">
-      <h1>Labyrinth</h1>
-      <button id="startSingle" type="button">Single Player</button>
-      <button id="startTwo" type="button">Two Players</button>
-      <button id="instructions" type="button">Instructions</button>
-      <p>Level: <span id="level">1</span></p>
-    </section>
-  </main>
+<body class="bg-black text-white">
+    <!-- Home Screen -->
+    <div id="homeScreen" class="home-screen flex flex-col items-center justify-center">
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
+            <div id="particleContainer" class="w-full h-full"></div>
+        </div>
+        
+        <h1 class="title text-5xl md:text-7xl mb-8 text-red-500 z-10">Labyrinth</h1>
+        <div class="w-64 h-64 md:w-80 md:h-80 relative mb-8 z-10">
+            <svg class="w-full h-full" viewBox="0 0 100 100">
+                <!-- Maze background -->
+                <defs>
+                    <radialGradient id="mazeGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                        <stop offset="0%" stop-color="#16213e" />
+                        <stop offset="100%" stop-color="#0f0f0f" />
+                    </radialGradient>
+                </defs>
+                <rect x="0" y="0" width="100" height="100" fill="url(#mazeGradient)" />
+                <path d="M10,10 L90,10 L90,90 L10,90 Z" fill="none" stroke="#444" stroke-width="2" />
+                <path d="M20,10 L20,30 L40,30 L40,20 L60,20 L60,40 L50,40 L50,60 L70,60 L70,80 L90,80" fill="none" stroke="#444" stroke-width="2" />
+                <path d="M10,20 L30,20 L30,40 L10,40" fill="none" stroke="#444" stroke-width="2" />
+                <path d="M10,50 L30,50 L30,70 L50,70 L50,90" fill="none" stroke="#444" stroke-width="2" />
+                <path d="M40,40 L40,50 L20,50" fill="none" stroke="#444" stroke-width="2" />
+                <path d="M60,50 L80,50 L80,30 L70,30 L70,10" fill="none" stroke="#444" stroke-width="2" />
+                <path d="M60,60 L60,80 L40,80 L40,90" fill="none" stroke="#444" stroke-width="2" />
+                <path d="M80,60 L90,60" fill="none" stroke="#444" stroke-width="2" />
+                <path d="M10,80 L30,80" fill="none" stroke="#444" stroke-width="2" />
+                
+                <!-- Character -->
+                <circle id="homeCharacter" cx="15" cy="15" r="5" fill="#00ccff">
+                    <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
+                </circle>
+                
+                <!-- Monster -->
+                <circle id="homeMonster" cx="85" cy="85" r="5" fill="#ff3333">
+                    <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
+                </circle>
+            </svg>
+        </div>
+        <div class="flex flex-col items-center z-10">
+            <button id="startBtn" class="btn bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full text-xl mb-4">
+                START GAME
+            </button>
+            <button id="howToPlayBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-lg mb-4">
+                HOW TO PLAY
+            </button>
+            <div class="text-center max-w-md px-4">
+                <p class="mb-2 text-gray-300">Navigate through endless mazes while avoiding traps and a relentless monster.</p>
+                <p class="text-sm text-gray-400">Use arrow keys or on-screen controls to move.</p>
+            </div>
+        </div>
+    </div>
 
-  <canvas id="gameContainer" width="600" height="600" role="main" aria-label="Game area"></canvas>
-  <button id="fullscreenBtn" type="button" aria-label="Toggle fullscreen">⛶</button>
+    <!-- How To Play Screen -->
+    <div id="howToPlayScreen" class="home-screen flex flex-col items-center justify-center" style="display: none;">
+        <h1 class="title text-4xl md:text-5xl mb-8 text-red-500">How To Play</h1>
+        <div class="bg-gray-900 bg-opacity-70 p-6 rounded-lg max-w-lg">
+            <ul class="list-disc pl-5 space-y-3">
+                <li><span class="text-blue-400">Goal:</span> Find the exit (green glow) to advance to the next floor.</li>
+                <li><span class="text-red-400">Danger:</span> Avoid the monster that will chase you when you're visible.</li>
+                <li><span class="text-orange-400">Traps:</span> Red glowing areas will alert the monster to your location.</li>
+                <li><span class="text-yellow-400">Power-ups:</span> Collect gold items for temporary speed boosts or invisibility.</li>
+                <li><span class="text-green-400">Fog of War:</span> You can only see a small area around you.</li>
+                <li><span class="text-purple-400">Difficulty:</span> Each floor gets progressively harder with faster monsters and more traps.</li>
+            </ul>
+            <div class="mt-6 flex justify-center">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-blue-500 rounded-full mr-2"></div>
+                        <span>Player</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-red-500 rounded-full mr-2"></div>
+                        <span>Monster</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-green-500 rounded-full mr-2"></div>
+                        <span>Exit</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-orange-500 rounded-full mr-2"></div>
+                        <span>Trap</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-yellow-500 rounded-full mr-2"></div>
+                        <span>Power-up</span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-gray-800 rounded-full mr-2"></div>
+                        <span>Fog</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button id="backBtn" class="btn bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded-full text-lg mt-8">
+            BACK
+        </button>
+    </div>
 
-  <audio id="ambience" loop>
-    <source src="background.mp3" type="audio/mpeg" />
-  </audio>
+    <!-- Game Container -->
+    <div id="gameContainer" class="game-container hidden">
+        <div id="maze" class="maze"></div>
+        
+        <!-- Game UI -->
+        <div class="game-ui">
+            <div class="flex justify-between items-center">
+                <div class="bg-black bg-opacity-70 p-2 rounded-lg flex items-center">
+                    <div class="mr-4">
+                        <span class="text-sm game-font">FLOOR</span>
+                        <span id="floorLevel" class="ml-2 font-bold game-font">1</span>
+                    </div>
+                    <div>
+                        <span class="text-sm game-font">SCORE</span>
+                        <span id="scoreValue" class="ml-2 font-bold game-font">0</span>
+                    </div>
+                </div>
+                <div class="flex">
+                    <div id="mapBtn" class="btn bg-black bg-opacity-70 p-2 rounded-lg mr-2 pointer-events-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                    </div>
+                    <div id="pauseBtn" class="btn bg-black bg-opacity-70 p-2 rounded-lg pointer-events-auto">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Power-up indicator -->
+            <div id="powerupIndicator" class="fixed top-16 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 px-4 py-2 rounded-full hidden">
+                <div class="flex items-center">
+                    <div id="powerupIcon" class="w-6 h-6 mr-2 rounded-full bg-yellow-500"></div>
+                    <span id="powerupName" class="mr-2 game-font">Speed Boost</span>
+                    <div class="progress-container w-24">
+                        <div id="powerupProgress" class="progress-bar" style="width: 100%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mini-map -->
+        <div id="miniMap" class="mini-map">
+            <div id="miniMapContent" class="mini-map-content"></div>
+        </div>
+        
+        <!-- Notification -->
+        <div id="notification" class="notification"></div>
+        
+        <!-- Mobile Controls -->
+        <div class="controls">
+            <div class="control-btn" id="upBtn">↑</div>
+            <div class="flex">
+                <div class="control-btn" id="leftBtn">←</div>
+                <div class="control-btn" id="rightBtn">→</div>
+            </div>
+            <div class="control-btn" id="downBtn">↓</div>
+        </div>
+        
+        <!-- Game Over Screen -->
+        <div id="gameOver" class="game-over">
+            <h2 class="title text-4xl text-red-500 mb-4">GAME OVER</h2>
+            <p class="mb-2">You reached floor <span id="finalFloor">1</span></p>
+            <p class="mb-6">Final score: <span id="finalScore">0</span></p>
+            <button id="restartBtn" class="btn bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full mb-4">
+                TRY AGAIN
+            </button>
+            <button id="menuBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full">
+                MAIN MENU
+            </button>
+        </div>
+        
+        <!-- Level Complete Screen -->
+        <div id="levelComplete" class="level-complete">
+            <h2 class="title text-4xl text-green-500 mb-4">FLOOR CLEARED!</h2>
+            <p class="mb-2">Descending to floor <span id="nextFloor">2</span></p>
+            <p class="mb-6">Current score: <span id="currentScore">0</span></p>
+            <div class="w-16 h-16 relative">
+                <svg class="animate-spin" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </div>
+        </div>
+        
+        <!-- Pause Screen -->
+        <div id="pauseScreen" class="pause-screen">
+            <h2 class="title text-4xl text-blue-500 mb-6">GAME PAUSED</h2>
+            <button id="resumeBtn" class="btn bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full mb-4">
+                RESUME
+            </button>
+            <button id="restartFromPauseBtn" class="btn bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-6 rounded-full mb-4">
+                RESTART
+            </button>
+            <button id="quitBtn" class="btn bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-full">
+                QUIT
+            </button>
+        </div>
+    </div>
 
-<script>
-  const sprites = {
-    player1: new Image(),
-    player2: new Image(),
-    exit: new Image()
-  };
-
-  function preloadImages() {
-    return new Promise((resolve, reject) => {
-      const images = [
-        { img: sprites.player1, src: 'spritesheet.png' },
-        { img: sprites.player2, src: 'monster.jpeg' },
-        { img: sprites.exit, src: 'door.png' }
-      ];
-      
-      let loaded = 0;
-      images.forEach(({ img, src }) => {
-        img.onload = () => {
-          if (++loaded === images.length) resolve();
+    <script>
+        // Game state
+        const state = {
+            gameStarted: false,
+            paused: false,
+            currentFloor: 1,
+            score: 0,
+            mazeSize: 15,
+            cellSize: 0,
+            playerPosition: { x: 1, y: 1 },
+            monsterPosition: { x: 0, y: 0 },
+            monsterActive: false,
+            traps: [],
+            powerups: [],
+            maze: [],
+            fogOfWar: [],
+            visibilityRadius: 2,
+            playerElement: null,
+            monsterElement: null,
+            exitPosition: { x: 0, y: 0 },
+            gameOver: false,
+            keysPressed: {},
+            lastUpdate: 0,
+            monsterSpeed: 0.7, // Relative to player speed
+            monsterUpdateCounter: 0,
+            isMobile: false,
+            miniMapVisible: false,
+            activePowerup: null,
+            powerupTimer: 0,
+            powerupDuration: 10000, // 10 seconds
+            particles: []
         };
-        img.onerror = reject;
-        img.src = src;
-      });
-    });
-  }
 
-  class Maze {
-    constructor(size) {
-      this.size = size;
-      this.grid = [];
-      this.exit = { x: size - 1, y: size - 1 };
-      this.generate();
-    }
-    generate() {
-      this.grid = Array(this.size).fill().map(() =>
-        Array(this.size).fill().map(() => ({
-          top: true, right: true, bottom: true, left: true, visited: false
-        }))
-      );
-      const stack = [];
-      let current = { x: 0, y: 0 };
-      this.grid[current.y][current.x].visited = true;
-      while (true) {
-        const neighbors = this.getUnvisitedNeighbors(current);
-        if (neighbors.length > 0) {
-          const next = neighbors[Math.floor(Math.random() * neighbors.length)];
-          this.removeWall(current, next);
-          stack.push(current);
-          current = next;
-          this.grid[current.y][current.x].visited = true;
-        } else if (stack.length > 0) {
-          current = stack.pop();
-        } else break;
-      }
-    }
-    getUnvisitedNeighbors(pos) {
-      const dirs = [
-        { x: 0, y: -1, wall: 'top' }, { x: 1, y: 0, wall: 'right' },
-        { x: 0, y: 1, wall: 'bottom' }, { x: -1, y: 0, wall: 'left' }
-      ];
-      return dirs.filter(dir => {
-        const newX = pos.x + dir.x, newY = pos.y + dir.y;
-        return newX >= 0 && newX < this.size && newY >= 0 && newY < this.size &&
-               !this.grid[newY][newX].visited;
-      }).map(dir => ({ x: pos.x + dir.x, y: pos.y + dir.y, dir: dir.wall }));
-    }
-    removeWall(current, next) {
-      const dx = next.x - current.x, dy = next.y - current.y;
-      if (dx === 1) {
-        this.grid[current.y][current.x].right = false;
-        this.grid[next.y][next.x].left = false;
-      } else if (dx === -1) {
-        this.grid[current.y][current.x].left = false;
-        this.grid[next.y][next.x].right = false;
-      }
-      if (dy === 1) {
-        this.grid[current.y][current.x].bottom = false;
-        this.grid[next.y][next.x].top = false;
-      } else if (dy === -1) {
-        this.grid[current.y][current.x].top = false;
-        this.grid[next.y][next.x].bottom = false;
-      }
-    }
-  }
+        // DOM Elements
+        const homeScreen = document.getElementById('homeScreen');
+        const howToPlayScreen = document.getElementById('howToPlayScreen');
+        const gameContainer = document.getElementById('gameContainer');
+        const mazeElement = document.getElementById('maze');
+        const floorLevelElement = document.getElementById('floorLevel');
+        const scoreValueElement = document.getElementById('scoreValue');
+        const gameOverScreen = document.getElementById('gameOver');
+        const levelCompleteScreen = document.getElementById('levelComplete');
+        const pauseScreen = document.getElementById('pauseScreen');
+        const finalFloorElement = document.getElementById('finalFloor');
+        const finalScoreElement = document.getElementById('finalScore');
+        const nextFloorElement = document.getElementById('nextFloor');
+        const currentScoreElement = document.getElementById('currentScore');
+        const homeCharacter = document.getElementById('homeCharacter');
+        const homeMonster = document.getElementById('homeMonster');
+        const miniMap = document.getElementById('miniMap');
+        const miniMapContent = document.getElementById('miniMapContent');
+        const powerupIndicator = document.getElementById('powerupIndicator');
+        const powerupName = document.getElementById('powerupName');
+        const powerupProgress = document.getElementById('powerupProgress');
+        const notification = document.getElementById('notification');
+        const particleContainer = document.getElementById('particleContainer');
 
-  class Player {
-    constructor(number) {
-      this.number = number;
-      this.x = 0;
-      this.y = 0;
-      this.size = 40;
-      this.sprite = number === 1 ? sprites.player1 : sprites.player2;
-      this.trail = [];
-      this.lastMoveTime = Date.now();
-      this.direction = 'down';
-    }
-    move(dx, dy, maze) {
-      if (dx === 1) this.direction = 'right';
-      if (dx === -1) this.direction = 'left';
-      if (dy === 1) this.direction = 'down';
-      if (dy === -1) this.direction = 'up';
-      const newX = this.x + dx, newY = this.y + dy;
-      if (newX >= 0 && newX < maze.size && newY >= 0 && newY < maze.size &&
-          this.canMove(dx, dy, maze)) {
-        this.x = newX;
-        this.y = newY;
-        this.trail.push({ x: this.x, y: this.y, direction: this.direction });
-        if (this.trail.length > 5) this.trail.shift();
-        this.lastMoveTime = Date.now();
-        return true;
-      }
-      return false;
-    }
-    canMove(dx, dy, maze) {
-      const cell = maze.grid[this.y][this.x];
-      if (dx === 1) return !cell.right;
-      if (dx === -1) return !cell.left;
-      if (dy === 1) return !cell.bottom;
-      if (dy === -1) return !cell.top;
-      return false;
-    }
-    getLight() {
-      const flicker = Math.random() * 0.2 + 0.9;
-      const baseRadius = 2.5 * Game.cellSize * flicker;
-      return {
-        x: (this.x + 0.5) * Game.cellSize,
-        y: (this.y + 0.5) * Game.cellSize,
-        radius: baseRadius,
-        angle: this.getDirectionAngle(),
-        colorStops: [
-          { offset: 0, color: 'rgba(255, 160, 100, 0.9)' },
-          { offset: 0.7, color: 'rgba(255, 140, 80, 0.4)' },
-          { offset: 1, color: 'rgba(255, 120, 60, 0)' }
-        ]
-      };
-    }
-    getDirectionAngle() {
-      return {
-        up: -Math.PI/2,
-        down: Math.PI/2,
-        left: Math.PI,
-        right: 0
-      }[this.direction];
-    }
-  }
+        // Character SVG
+        const characterSVG = `
+            <svg viewBox="0 0 50 50" width="100%" height="100%">
+                <defs>
+                    <radialGradient id="playerGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                        <stop offset="0%" stop-color="#00eeff" />
+                        <stop offset="100%" stop-color="#0077ff" />
+                    </radialGradient>
+                </defs>
+                <circle cx="25" cy="25" r="22" fill="url(#playerGradient)" opacity="0.7">
+                    <animate attributeName="r" values="22;20;22" dur="2s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="25" cy="25" r="15" fill="#00eeff" opacity="0.9" />
+                <circle cx="20" cy="20" r="4" fill="white" />
+                <circle cx="30" cy="20" r="4" fill="white" />
+                <circle cx="20" cy="20" r="2" fill="black" />
+                <circle cx="30" cy="20" r="2" fill="black" />
+                <path d="M18,30 Q25,35 32,30" stroke="black" stroke-width="2" fill="none" />
+            </svg>
+        `;
 
-  const Game = {
-    canvas: null,
-    ctx: null,
-    buffer: null,
-    bCtx: null,
-    cellSize: 30,
-    maze: null,
-    players: [],
-    level: 1,
-    gameMode: 1,
-    colors: { wall: '#666', path: '#f3f4f6' }, // light gray background
+        // Monster SVG
+        const monsterSVG = `
+            <svg viewBox="0 0 50 50" width="100%" height="100%">
+                <defs>
+                    <radialGradient id="monsterGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                        <stop offset="0%" stop-color="#ff5555" />
+                        <stop offset="100%" stop-color="#990000" />
+                    </radialGradient>
+                </defs>
+                <circle cx="25" cy="25" r="22" fill="url(#monsterGradient)" opacity="0.7">
+                    <animate attributeName="r" values="22;20;22" dur="1.5s" repeatCount="indefinite" />
+                </circle>
+                <circle cx="25" cy="25" r="15" fill="#ff0000" opacity="0.9" />
+                <circle cx="20" cy="20" r="4" fill="black" />
+                <circle cx="30" cy="20" r="4" fill="black" />
+                <circle cx="20" cy="20" r="1" fill="white" />
+                <circle cx="30" cy="20" r="1" fill="white" />
+                <path d="M15,30 Q25,20 35,30" stroke="black" stroke-width="2" fill="none" />
+                <path d="M15,25 L10,20 M35,25 L40,20" stroke="black" stroke-width="2" />
+                <path d="M15,35 L10,40 M35,35 L40,40" stroke="black" stroke-width="2" />
+            </svg>
+        `;
 
-    async init(mode) {
-      try {
-        await preloadImages();
-        this.gameMode = mode;
-        this.canvas = document.getElementById('gameContainer');
-        this.ctx = this.canvas.getContext('2d');
-        this.buffer = document.createElement('canvas');
-        this.bCtx = this.buffer.getContext('2d');
-        this.setupControls();
-        this.newGame();
-        this.gameLoop();
-      } catch(err) {
-        alert('Error loading resources: ' + err.message);
-      }
-    },
+        // Power-up types
+        const powerupTypes = [
+            {
+                name: "Speed Boost",
+                color: "#ffd700",
+                effect: () => {
+                    state.playerSpeed = 2;
+                    showNotification("Speed Boost activated!");
+                },
+                end: () => {
+                    state.playerSpeed = 1;
+                }
+            },
+            {
+                name: "Invisibility",
+                color: "#00ffff",
+                effect: () => {
+                    state.playerInvisible = true;
+                    state.playerElement.style.opacity = "0.5";
+                    showNotification("Invisibility activated!");
+                },
+                end: () => {
+                    state.playerInvisible = false;
+                    state.playerElement.style.opacity = "1";
+                }
+            },
+            {
+                name: "Expanded Vision",
+                color: "#9966ff",
+                effect: () => {
+                    state.originalVisibilityRadius = state.visibilityRadius;
+                    state.visibilityRadius += 2;
+                    showNotification("Expanded Vision activated!");
+                    updateFogOfWar();
+                },
+                end: () => {
+                    state.visibilityRadius = state.originalVisibilityRadius;
+                    updateFogOfWar();
+                }
+            },
+            {
+                name: "Monster Slow",
+                color: "#ff9900",
+                effect: () => {
+                    state.originalMonsterSpeed = state.monsterSpeed;
+                    state.monsterSpeed *= 0.5;
+                    showNotification("Monster Slowed!");
+                },
+                end: () => {
+                    state.monsterSpeed = state.originalMonsterSpeed;
+                }
+            }
+        ];
 
-    setupControls() {
-      const controls = {
-        ArrowUp: [0, -1, 1], ArrowDown: [0, 1, 1],
-        ArrowLeft: [-1, 0, 1], ArrowRight: [1, 0, 1],
-        KeyW: [0, -1, 2], KeyS: [0, 1, 2],
-        KeyA: [-1, 0, 2], KeyD: [1, 0, 2]
-      };
-
-      // Remove any previous keydown listeners to avoid duplicates on restart
-      document.removeEventListener('keydown', this._keyHandler);
-
-      this._keyHandler = (e) => {
-        if (controls[e.code]) {
-          const [dx, dy, pNum] = controls[e.code];
-          // Find player on each keypress from current players array
-          const player = this.players.find(p => p.number === pNum);
-          if (player?.move(dx, dy, this.maze)) this.draw();
+        // Create particles for home screen
+        function createParticles() {
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.style.position = 'absolute';
+                particle.style.width = Math.random() * 3 + 1 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.backgroundColor = `rgba(${Math.random() * 100 + 100}, ${Math.random() * 100 + 100}, ${Math.random() * 255}, ${Math.random() * 0.5 + 0.3})`;
+                particle.style.borderRadius = '50%';
+                
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                particle.style.left = x + 'px';
+                particle.style.top = y + 'px';
+                
+                const speed = Math.random() * 1 + 0.5;
+                const angle = Math.random() * Math.PI * 2;
+                const vx = Math.cos(angle) * speed;
+                const vy = Math.sin(angle) * speed;
+                
+                state.particles.push({
+                    element: particle,
+                    x,
+                    y,
+                    vx,
+                    vy
+                });
+                
+                particleContainer.appendChild(particle);
+            }
         }
-      };
-      document.addEventListener('keydown', this._keyHandler);
-    },
 
-    newGame() {
-      this.maze = new Maze(10 + this.level * 2);
-      this.players = [new Player(1)];
-      if (this.gameMode === 2) this.players.push(new Player(2));
-      this.resize();
-      this.draw();
-      document.getElementById('level').textContent = this.level;
-    },
-
-    gameLoop() {
-      this.draw();
-      requestAnimationFrame(() => this.gameLoop());
-    },
-
-    draw() {
-      if (!this.ctx) return;
-
-      this.buffer.width = this.canvas.width;
-      this.buffer.height = this.canvas.height;
-
-      this.bCtx.fillStyle = this.colors.path;
-      this.bCtx.fillRect(0, 0, this.buffer.width, this.buffer.height);
-
-      for (let y = 0; y < this.maze.size; y++) {
-        for (let x = 0; x < this.maze.size; x++) {
-          this.drawCell(x, y, this.bCtx);
+        // Animate particles
+        function animateParticles() {
+            for (const particle of state.particles) {
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                
+                // Wrap around screen
+                if (particle.x < 0) particle.x = window.innerWidth;
+                if (particle.x > window.innerWidth) particle.x = 0;
+                if (particle.y < 0) particle.y = window.innerHeight;
+                if (particle.y > window.innerHeight) particle.y = 0;
+                
+                particle.element.style.left = particle.x + 'px';
+                particle.element.style.top = particle.y + 'px';
+            }
+            
+            if (!state.gameStarted) {
+                requestAnimationFrame(animateParticles);
+            }
         }
-      }
 
-      const exitSize = this.cellSize * 0.8;
-      this.bCtx.drawImage(
-        sprites.exit,
-        (this.maze.exit.x + 0.5) * this.cellSize - exitSize / 2,
-        (this.maze.exit.y + 0.5) * this.cellSize - exitSize / 2,
-        exitSize,
-        exitSize
-      );
+        // Animate home screen characters
+        function animateHomeScreen() {
+            const time = Date.now() * 0.001;
+            
+            // Move character along a path
+            const characterX = 15 + Math.sin(time) * 10;
+            const characterY = 15 + Math.cos(time * 0.7) * 10;
+            homeCharacter.setAttribute('cx', characterX);
+            homeCharacter.setAttribute('cy', characterY);
+            
+            // Move monster to chase character with delay
+            const monsterX = 85 - Math.sin(time - 1) * 10;
+            const monsterY = 85 - Math.cos(time * 0.7 - 1) * 10;
+            homeMonster.setAttribute('cx', monsterX);
+            homeMonster.setAttribute('cy', monsterY);
+            
+            if (!state.gameStarted) {
+                requestAnimationFrame(animateHomeScreen);
+            }
+        }
+        
+        // Create particles and start animations
+        createParticles();
+        animateParticles();
+        animateHomeScreen();
 
-      this.players.forEach(player => {
-        player.trail.forEach((pos, i) => {
-          const scale = 0.8 - i * 0.15;
-          const trailSize = player.size * scale;
-          this.bCtx.save();
-          this.bCtx.globalAlpha = 0.5 - i * 0.1;
-          this.bCtx.drawImage(
-            player.sprite,
-            (pos.x + 0.5) * this.cellSize - trailSize / 2,
-            (pos.y + 0.5) * this.cellSize - trailSize / 2,
-            trailSize,
-            trailSize
-          );
-          this.bCtx.restore();
+        // Show notification
+        function showNotification(message, duration = 3000) {
+            notification.textContent = message;
+            notification.style.opacity = 1;
+            
+            setTimeout(() => {
+                notification.style.opacity = 0;
+            }, duration);
+        }
+
+        // Initialize the game
+        function initGame() {
+            state.isMobile = window.innerWidth < 768;
+            state.cellSize = calculateCellSize();
+            state.playerSpeed = 1;
+            resetGame();
+            
+            // Event listeners
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+            window.addEventListener('resize', handleResize);
+            
+            // Mobile controls
+            document.getElementById('upBtn').addEventListener('touchstart', () => state.keysPressed.ArrowUp = true);
+            document.getElementById('leftBtn').addEventListener('touchstart', () => state.keysPressed.ArrowLeft = true);
+            document.getElementById('rightBtn').addEventListener('touchstart', () => state.keysPressed.ArrowRight = true);
+            document.getElementById('downBtn').addEventListener('touchstart', () => state.keysPressed.ArrowDown = true);
+            
+            document.getElementById('upBtn').addEventListener('touchend', () => state.keysPressed.ArrowUp = false);
+            document.getElementById('leftBtn').addEventListener('touchend', () => state.keysPressed.ArrowLeft = false);
+            document.getElementById('rightBtn').addEventListener('touchend', () => state.keysPressed.ArrowRight = false);
+            document.getElementById('downBtn').addEventListener('touchend', () => state.keysPressed.ArrowDown = false);
+            
+            // Map button
+            document.getElementById('mapBtn').addEventListener('click', toggleMiniMap);
+            
+            // Start game loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Toggle mini-map
+        function toggleMiniMap() {
+            state.miniMapVisible = !state.miniMapVisible;
+            miniMap.style.display = state.miniMapVisible ? 'block' : 'none';
+            updateMiniMap();
+        }
+
+        // Update mini-map
+        function updateMiniMap() {
+            if (!state.miniMapVisible) return;
+            
+            miniMapContent.innerHTML = '';
+            const cellSize = Math.min(miniMap.offsetWidth, miniMap.offsetHeight) / state.mazeSize;
+            
+            // Draw maze
+            for (let y = 0; y < state.mazeSize; y++) {
+                for (let x = 0; x < state.mazeSize; x++) {
+                    // Only show cells that have been revealed
+                    if (!state.fogOfWar[y][x]) {
+                        const cell = document.createElement('div');
+                        cell.className = `mini-map-cell ${state.maze[y][x] === 1 ? 'mini-map-wall' : 'mini-map-path'}`;
+                        cell.style.width = `${cellSize}px`;
+                        cell.style.height = `${cellSize}px`;
+                        cell.style.left = `${x * cellSize}px`;
+                        cell.style.top = `${y * cellSize}px`;
+                        miniMapContent.appendChild(cell);
+                    }
+                }
+            }
+            
+            // Draw exit if visible
+            if (!state.fogOfWar[state.exitPosition.y][state.exitPosition.x]) {
+                const exit = document.createElement('div');
+                exit.className = 'mini-map-cell mini-map-exit';
+                exit.style.width = `${cellSize}px`;
+                exit.style.height = `${cellSize}px`;
+                exit.style.left = `${state.exitPosition.x * cellSize}px`;
+                exit.style.top = `${state.exitPosition.y * cellSize}px`;
+                miniMapContent.appendChild(exit);
+            }
+            
+            // Draw player
+            const player = document.createElement('div');
+            player.className = 'mini-map-cell mini-map-player';
+            player.style.width = `${cellSize}px`;
+            player.style.height = `${cellSize}px`;
+            player.style.left = `${state.playerPosition.x * cellSize}px`;
+            player.style.top = `${state.playerPosition.y * cellSize}px`;
+            miniMapContent.appendChild(player);
+            
+            // Draw monster if visible
+            if (!state.fogOfWar[state.monsterPosition.y][state.monsterPosition.x]) {
+                const monster = document.createElement('div');
+                monster.className = 'mini-map-cell mini-map-monster';
+                monster.style.width = `${cellSize}px`;
+                monster.style.height = `${cellSize}px`;
+                monster.style.left = `${state.monsterPosition.x * cellSize}px`;
+                monster.style.top = `${state.monsterPosition.y * cellSize}px`;
+                miniMapContent.appendChild(monster);
+            }
+        }
+
+        // Calculate cell size based on screen dimensions
+        function calculateCellSize() {
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            const minDimension = Math.min(screenWidth, screenHeight);
+            return Math.floor(minDimension / (state.mazeSize + 2));
+        }
+
+        // Handle window resize
+        function handleResize() {
+            state.cellSize = calculateCellSize();
+            state.isMobile = window.innerWidth < 768;
+            renderMaze();
+            if (state.miniMapVisible) {
+                updateMiniMap();
+            }
+        }
+
+        // Reset game state for a new game or level
+        function resetGame(nextFloor = false) {
+            if (!nextFloor) {
+                state.currentFloor = 1;
+                state.monsterSpeed = 0.7;
+                state.score = 0;
+                state.gameOver = false;
+            } else {
+                state.currentFloor++;
+                state.monsterSpeed = Math.min(0.7 + state.currentFloor * 0.03, 0.95);
+                // Add score for completing a floor
+                state.score += state.currentFloor * 100;
+            }
+            
+            // Update UI
+            floorLevelElement.textContent = state.currentFloor;
+            scoreValueElement.textContent = state.score;
+            
+            // Clear active powerup
+            if (state.activePowerup) {
+                state.activePowerup.end();
+                state.activePowerup = null;
+                powerupIndicator.classList.add('hidden');
+            }
+            
+            // Generate new maze with size based on floor
+            state.mazeSize = Math.min(15 + Math.floor(state.currentFloor / 3), 25);
+            state.cellSize = calculateCellSize();
+            generateMaze();
+            
+            // Place player at start
+            state.playerPosition = { x: 1, y: 1 };
+            
+            // Place monster far from player
+            placeMonster();
+            
+            // Place exit
+            placeExit();
+            
+            // Place traps
+            placeTraps();
+            
+            // Place powerups
+            placePowerups();
+            
+            // Initialize fog of war
+            initFogOfWar();
+            
+            // Render maze
+            renderMaze();
+            
+            // Update mini-map if visible
+            if (state.miniMapVisible) {
+                updateMiniMap();
+            }
+            
+            // Start monster after delay
+            state.monsterActive = false;
+            setTimeout(() => {
+                state.monsterActive = true;
+                showNotification("The monster is now active!", 2000);
+            }, 3000);
+        }
+
+        // Generate maze using recursive backtracking
+        function generateMaze() {
+            const size = state.mazeSize;
+            state.maze = Array(size).fill().map(() => Array(size).fill(1));
+            
+            // Start with all walls
+            for (let y = 0; y < size; y++) {
+                for (let x = 0; x < size; x++) {
+                    state.maze[y][x] = 1;
+                }
+            }
+            
+            // Carve paths
+            carvePassagesFrom(1, 1);
+            
+            // Ensure start and end are open
+            state.maze[1][1] = 0;
+            state.maze[size - 2][size - 2] = 0;
+            
+            // Add some random paths to make maze less linear
+            const extraPaths = Math.floor(size * size * 0.05); // 5% of cells
+            for (let i = 0; i < extraPaths; i++) {
+                const x = Math.floor(Math.random() * (size - 2)) + 1;
+                const y = Math.floor(Math.random() * (size - 2)) + 1;
+                if (state.maze[y][x] === 1) {
+                    // Check if it would create a 2x2 open area (avoid this)
+                    let adjacentOpenCount = 0;
+                    if (x > 0 && state.maze[y][x-1] === 0) adjacentOpenCount++;
+                    if (x < size-1 && state.maze[y][x+1] === 0) adjacentOpenCount++;
+                    if (y > 0 && state.maze[y-1][x] === 0) adjacentOpenCount++;
+                    if (y < size-1 && state.maze[y+1][x] === 0) adjacentOpenCount++;
+                    
+                    if (adjacentOpenCount <= 2) {
+                        state.maze[y][x] = 0;
+                    }
+                }
+            }
+        }
+
+        // Recursive backtracking algorithm to generate maze
+        function carvePassagesFrom(x, y) {
+            const directions = [
+                [0, -2], // North
+                [2, 0],  // East
+                [0, 2],  // South
+                [-2, 0]  // West
+            ];
+            
+            // Shuffle directions
+            directions.sort(() => Math.random() - 0.5);
+            
+            for (const [dx, dy] of directions) {
+                const nx = x + dx;
+                const ny = y + dy;
+                
+                if (nx > 0 && nx < state.mazeSize - 1 && ny > 0 && ny < state.mazeSize - 1 && state.maze[ny][nx] === 1) {
+                    // Carve passage
+                    state.maze[y + dy/2][x + dx/2] = 0;
+                    state.maze[ny][nx] = 0;
+                    carvePassagesFrom(nx, ny);
+                }
+            }
+        }
+
+        // Place monster far from player
+        function placeMonster() {
+            const size = state.mazeSize;
+            let placed = false;
+            
+            while (!placed) {
+                const x = Math.floor(Math.random() * (size - 2)) + 1;
+                const y = Math.floor(Math.random() * (size - 2)) + 1;
+                
+                // Check if it's a valid path and far from player
+                if (state.maze[y][x] === 0) {
+                    const distance = Math.abs(x - state.playerPosition.x) + Math.abs(y - state.playerPosition.y);
+                    if (distance > size / 2) {
+                        state.monsterPosition = { x, y };
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        // Place exit
+        function placeExit() {
+            const size = state.mazeSize;
+            // Try to place exit far from start
+            let bestDistance = 0;
+            let bestPosition = { x: size - 2, y: size - 2 };
+            
+            for (let y = 1; y < size - 1; y++) {
+                for (let x = 1; x < size - 1; x++) {
+                    if (state.maze[y][x] === 0) {
+                        const distance = Math.abs(x - 1) + Math.abs(y - 1); // Distance from start
+                        if (distance > bestDistance) {
+                            bestDistance = distance;
+                            bestPosition = { x, y };
+                        }
+                    }
+                }
+            }
+            
+            state.exitPosition = bestPosition;
+        }
+
+        // Place traps
+        function placeTraps() {
+            const size = state.mazeSize;
+            const numTraps = Math.floor(size * size * 0.05) + Math.floor(state.currentFloor / 2); // More traps on higher floors
+            state.traps = [];
+            
+            for (let i = 0; i < numTraps; i++) {
+                let placed = false;
+                
+                while (!placed) {
+                    const x = Math.floor(Math.random() * (size - 2)) + 1;
+                    const y = Math.floor(Math.random() * (size - 2)) + 1;
+                    
+                    // Check if it's a valid path and not player, monster, or exit
+                    if (state.maze[y][x] === 0 && 
+                        !(x === state.playerPosition.x && y === state.playerPosition.y) &&
+                        !(x === state.monsterPosition.x && y === state.monsterPosition.y) &&
+                        !(x === state.exitPosition.x && y === state.exitPosition.y) &&
+                        !state.traps.some(trap => trap.x === x && trap.y === y)) {
+                        
+                        state.traps.push({ x, y });
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        // Place powerups
+        function placePowerups() {
+            const size = state.mazeSize;
+            const numPowerups = Math.min(2 + Math.floor(state.currentFloor / 3), 5); // More powerups on higher floors, max 5
+            state.powerups = [];
+            
+            for (let i = 0; i < numPowerups; i++) {
+                let placed = false;
+                
+                while (!placed) {
+                    const x = Math.floor(Math.random() * (size - 2)) + 1;
+                    const y = Math.floor(Math.random() * (size - 2)) + 1;
+                    
+                    // Check if it's a valid path and not player, monster, exit, trap, or another powerup
+                    if (state.maze[y][x] === 0 && 
+                        !(x === state.playerPosition.x && y === state.playerPosition.y) &&
+                        !(x === state.monsterPosition.x && y === state.monsterPosition.y) &&
+                        !(x === state.exitPosition.x && y === state.exitPosition.y) &&
+                        !state.traps.some(trap => trap.x === x && trap.y === y) &&
+                        !state.powerups.some(powerup => powerup.x === x && powerup.y === y)) {
+                        
+                        // Random powerup type
+                        const type = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
+                        state.powerups.push({ x, y, type });
+                        placed = true;
+                    }
+                }
+            }
+        }
+
+        // Initialize fog of war
+        function initFogOfWar() {
+            const size = state.mazeSize;
+            state.fogOfWar = Array(size).fill().map(() => Array(size).fill(true));
+            updateFogOfWar();
+        }
+
+        // Update fog of war based on player position
+        function updateFogOfWar() {
+            const { x, y } = state.playerPosition;
+            const radius = state.visibilityRadius;
+            
+            for (let dy = -radius; dy <= radius; dy++) {
+                for (let dx = -radius; dx <= radius; dx++) {
+                    const nx = x + dx;
+                    const ny = y + dy;
+                    
+                    if (nx >= 0 && nx < state.mazeSize && ny >= 0 && ny < state.mazeSize) {
+                        // Check if cell is within visibility radius (using Manhattan distance)
+                        if (Math.abs(dx) + Math.abs(dy) <= radius) {
+                            state.fogOfWar[ny][nx] = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Render the maze
+        function renderMaze() {
+            mazeElement.innerHTML = '';
+            mazeElement.style.width = `${state.mazeSize * state.cellSize}px`;
+            mazeElement.style.height = `${state.mazeSize * state.cellSize}px`;
+            
+            // Center the maze
+            const offsetX = (window.innerWidth - state.mazeSize * state.cellSize) / 2;
+            const offsetY = (window.innerHeight - state.mazeSize * state.cellSize) / 2;
+            mazeElement.style.left = `${offsetX}px`;
+            mazeElement.style.top = `${offsetY}px`;
+            
+            // Render cells
+            for (let y = 0; y < state.mazeSize; y++) {
+                for (let x = 0; x < state.mazeSize; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = state.maze[y][x] === 1 ? 'cell wall' : 'cell path';
+                    cell.style.width = `${state.cellSize}px`;
+                    cell.style.height = `${state.cellSize}px`;
+                    cell.style.left = `${x * state.cellSize}px`;
+                    cell.style.top = `${y * state.cellSize}px`;
+                    mazeElement.appendChild(cell);
+                    
+                    // Add fog of war
+                    if (state.fogOfWar[y][x]) {
+                        const fog = document.createElement('div');
+                        fog.className = 'fog';
+                        fog.style.width = `${state.cellSize}px`;
+                        fog.style.height = `${state.cellSize}px`;
+                        fog.style.left = `${x * state.cellSize}px`;
+                        fog.style.top = `${y * state.cellSize}px`;
+                        mazeElement.appendChild(fog);
+                    }
+                }
+            }
+            
+            // Render exit
+            const exit = document.createElement('div');
+            exit.className = 'exit';
+            exit.style.width = `${state.cellSize}px`;
+            exit.style.height = `${state.cellSize}px`;
+            exit.style.left = `${state.exitPosition.x * state.cellSize}px`;
+            exit.style.top = `${state.exitPosition.y * state.cellSize}px`;
+            mazeElement.appendChild(exit);
+            
+            // Render traps
+            state.traps.forEach(trap => {
+                const trapElement = document.createElement('div');
+                trapElement.className = 'trap';
+                trapElement.style.width = `${state.cellSize}px`;
+                trapElement.style.height = `${state.cellSize}px`;
+                trapElement.style.left = `${trap.x * state.cellSize}px`;
+                trapElement.style.top = `${trap.y * state.cellSize}px`;
+                mazeElement.appendChild(trapElement);
+            });
+            
+            // Render powerups
+            state.powerups.forEach(powerup => {
+                const powerupElement = document.createElement('div');
+                powerupElement.className = 'powerup';
+                powerupElement.style.width = `${state.cellSize}px`;
+                powerupElement.style.height = `${state.cellSize}px`;
+                powerupElement.style.left = `${powerup.x * state.cellSize}px`;
+                powerupElement.style.top = `${powerup.y * state.cellSize}px`;
+                powerupElement.style.background = `radial-gradient(circle, ${powerup.type.color} 0%, rgba(0,0,0,0) 70%)`;
+                mazeElement.appendChild(powerupElement);
+            });
+            
+            // Render player
+            const player = document.createElement('div');
+            player.className = 'player';
+            player.style.width = `${state.cellSize}px`;
+            player.style.height = `${state.cellSize}px`;
+            player.style.left = `${state.playerPosition.x * state.cellSize}px`;
+            player.style.top = `${state.playerPosition.y * state.cellSize}px`;
+            player.innerHTML = characterSVG;
+            mazeElement.appendChild(player);
+            state.playerElement = player;
+            
+            // Render monster
+            const monster = document.createElement('div');
+            monster.className = 'monster';
+            monster.style.width = `${state.cellSize}px`;
+            monster.style.height = `${state.cellSize}px`;
+            monster.style.left = `${state.monsterPosition.x * state.cellSize}px`;
+            monster.style.top = `${state.monsterPosition.y * state.cellSize}px`;
+            monster.innerHTML = monsterSVG;
+            mazeElement.appendChild(monster);
+            state.monsterElement = monster;
+        }
+
+        // Update player position
+        function updatePlayerPosition(dx, dy) {
+            if (state.gameOver || state.paused) return;
+            
+            const newX = state.playerPosition.x + dx;
+            const newY = state.playerPosition.y + dy;
+            
+            // Check if new position is valid
+            if (newX >= 0 && newX < state.mazeSize && newY >= 0 && newY < state.mazeSize && state.maze[newY][newX] === 0) {
+                state.playerPosition.x = newX;
+                state.playerPosition.y = newY;
+                
+                // Update player element position
+                state.playerElement.style.left = `${newX * state.cellSize}px`;
+                state.playerElement.style.top = `${newY * state.cellSize}px`;
+                
+                // Update fog of war
+                updateFogOfWar();
+                
+                // Check for collisions
+                checkCollisions();
+                
+                // Update mini-map if visible
+                if (state.miniMapVisible) {
+                    updateMiniMap();
+                }
+            }
+        }
+
+        // Update monster position
+        function updateMonsterPosition() {
+            if (!state.monsterActive || state.gameOver || state.paused) return;
+            
+            // If player is invisible, monster moves randomly
+            if (state.playerInvisible) {
+                moveMonsterRandomly();
+                return;
+            }
+            
+            // Simple A* pathfinding towards player
+            const path = findPathToPlayer();
+            if (path && path.length > 1) {
+                const nextStep = path[1]; // path[0] is current position
+                
+                state.monsterPosition.x = nextStep.x;
+                state.monsterPosition.y = nextStep.y;
+                
+                // Update monster element position
+                state.monsterElement.style.left = `${nextStep.x * state.cellSize}px`;
+                state.monsterElement.style.top = `${nextStep.y * state.cellSize}px`;
+                
+                // Check for collisions
+                checkCollisions();
+                
+                // Update mini-map if visible
+                if (state.miniMapVisible) {
+                    updateMiniMap();
+                }
+            }
+        }
+
+        // Move monster randomly
+        function moveMonsterRandomly() {
+            const { x: startX, y: startY } = state.monsterPosition;
+            
+            const directions = [
+                [0, -1], // North
+                [1, 0],  // East
+                [0, 1],  // South
+                [-1, 0]  // West
+            ].filter(([dx, dy]) => {
+                const nx = startX + dx;
+                const ny = startY + dy;
+                return nx >= 0 && nx < state.mazeSize && ny >= 0 && ny < state.mazeSize && state.maze[ny][nx] === 0;
+            });
+            
+            if (directions.length > 0) {
+                const [dx, dy] = directions[Math.floor(Math.random() * directions.length)];
+                state.monsterPosition.x = startX + dx;
+                state.monsterPosition.y = startY + dy;
+                
+                // Update monster element position
+                state.monsterElement.style.left = `${state.monsterPosition.x * state.cellSize}px`;
+                state.monsterElement.style.top = `${state.monsterPosition.y * state.cellSize}px`;
+                
+                // Check for collisions
+                checkCollisions();
+            }
+        }
+
+        // Simple A* pathfinding
+        function findPathToPlayer() {
+            const { x: targetX, y: targetY } = state.playerPosition;
+            const { x: startX, y: startY } = state.monsterPosition;
+            
+            // If player is in fog, monster can't see them
+            if (state.fogOfWar[targetY][targetX]) {
+                // Random movement
+                const directions = [
+                    [0, -1], // North
+                    [1, 0],  // East
+                    [0, 1],  // South
+                    [-1, 0]  // West
+                ].filter(([dx, dy]) => {
+                    const nx = startX + dx;
+                    const ny = startY + dy;
+                    return nx >= 0 && nx < state.mazeSize && ny >= 0 && ny < state.mazeSize && state.maze[ny][nx] === 0;
+                });
+                
+                if (directions.length > 0) {
+                    const [dx, dy] = directions[Math.floor(Math.random() * directions.length)];
+                    return [
+                        { x: startX, y: startY },
+                        { x: startX + dx, y: startY + dy }
+                    ];
+                }
+                return null;
+            }
+            
+            // If player is visible, use A* to find path
+            const openSet = [{ x: startX, y: startY, g: 0, h: 0, f: 0, parent: null }];
+            const closedSet = new Set();
+            
+            while (openSet.length > 0) {
+                // Find node with lowest f score
+                let current = 0;
+                for (let i = 1; i < openSet.length; i++) {
+                    if (openSet[i].f < openSet[current].f) {
+                        current = i;
+                    }
+                }
+                
+                const currentNode = openSet[current];
+                
+                // Check if we reached the target
+                if (currentNode.x === targetX && currentNode.y === targetY) {
+                    // Reconstruct path
+                    const path = [];
+                    let node = currentNode;
+                    while (node) {
+                        path.unshift({ x: node.x, y: node.y });
+                        node = node.parent;
+                    }
+                    return path;
+                }
+                
+                // Move current node from open to closed set
+                openSet.splice(current, 1);
+                closedSet.add(`${currentNode.x},${currentNode.y}`);
+                
+                // Check neighbors
+                const directions = [
+                    [0, -1], // North
+                    [1, 0],  // East
+                    [0, 1],  // South
+                    [-1, 0]  // West
+                ];
+                
+                for (const [dx, dy] of directions) {
+                    const nx = currentNode.x + dx;
+                    const ny = currentNode.y + dy;
+                    
+                    // Skip if out of bounds or wall
+                    if (nx < 0 || nx >= state.mazeSize || ny < 0 || ny >= state.mazeSize || state.maze[ny][nx] === 1) {
+                        continue;
+                    }
+                    
+                    // Skip if in closed set
+                    if (closedSet.has(`${nx},${ny}`)) {
+                        continue;
+                    }
+                    
+                    // Calculate g, h, and f scores
+                    const g = currentNode.g + 1;
+                    const h = Math.abs(nx - targetX) + Math.abs(ny - targetY);
+                    const f = g + h;
+                    
+                    // Check if already in open set with better score
+                    const existingIndex = openSet.findIndex(node => node.x === nx && node.y === ny);
+                    if (existingIndex !== -1 && openSet[existingIndex].g <= g) {
+                        continue;
+                    }
+                    
+                    // Add to open set
+                    if (existingIndex === -1) {
+                        openSet.push({ x: nx, y: ny, g, h, f, parent: currentNode });
+                    } else {
+                        openSet[existingIndex].g = g;
+                        openSet[existingIndex].f = f;
+                        openSet[existingIndex].parent = currentNode;
+                    }
+                }
+            }
+            
+            return null; // No path found
+        }
+
+        // Check for collisions
+        function checkCollisions() {
+            const { x, y } = state.playerPosition;
+            
+            // Check for monster collision
+            if (x === state.monsterPosition.x && y === state.monsterPosition.y) {
+                gameOver();
+                return;
+            }
+            
+            // Check for trap collision
+            const trapIndex = state.traps.findIndex(trap => trap.x === x && trap.y === y);
+            if (trapIndex !== -1) {
+                // Shake the screen
+                gameContainer.classList.add('shake');
+                setTimeout(() => {
+                    gameContainer.classList.remove('shake');
+                }, 500);
+                
+                // Monster gets closer
+                state.monsterActive = true;
+                showNotification("Trap triggered! The monster knows your location!", 2000);
+                
+                // Remove the trap
+                state.traps.splice(trapIndex, 1);
+                renderMaze();
+                
+                // Add score
+                state.score += 10;
+                scoreValueElement.textContent = state.score;
+            }
+            
+            // Check for powerup collision
+            const powerupIndex = state.powerups.findIndex(powerup => powerup.x === x && powerup.y === y);
+            if (powerupIndex !== -1) {
+                const powerup = state.powerups[powerupIndex];
+                
+                // Apply powerup effect
+                if (state.activePowerup) {
+                    state.activePowerup.end();
+                }
+                
+                state.activePowerup = powerup.type;
+                state.activePowerup.effect();
+                state.powerupTimer = state.powerupDuration;
+                
+                // Update UI
+                powerupName.textContent = powerup.type.name;
+                powerupIndicator.classList.remove('hidden');
+                document.getElementById('powerupIcon').style.backgroundColor = powerup.type.color;
+                
+                // Remove the powerup
+                state.powerups.splice(powerupIndex, 1);
+                renderMaze();
+                
+                // Add score
+                state.score += 25;
+                scoreValueElement.textContent = state.score;
+            }
+            
+            // Check for exit collision
+            if (x === state.exitPosition.x && y === state.exitPosition.y) {
+                levelComplete();
+            }
+        }
+
+        // Game over
+        function gameOver() {
+            state.gameOver = true;
+            finalFloorElement.textContent = state.currentFloor;
+            finalScoreElement.textContent = state.score;
+            gameOverScreen.style.display = 'flex';
+            
+            // Flash the screen red
+            gameContainer.classList.add('flash');
+            setTimeout(() => {
+                gameContainer.classList.remove('flash');
+            }, 500);
+        }
+
+        // Level complete
+        function levelComplete() {
+            nextFloorElement.textContent = state.currentFloor + 1;
+            currentScoreElement.textContent = state.score;
+            levelCompleteScreen.style.display = 'flex';
+            
+            setTimeout(() => {
+                levelCompleteScreen.style.display = 'none';
+                resetGame(true);
+            }, 2000);
+        }
+
+        // Handle key down
+        function handleKeyDown(e) {
+            if (state.paused) return;
+            
+            state.keysPressed[e.key] = true;
+            
+            // Toggle mini-map with 'M' key
+            if (e.key === 'm' || e.key === 'M') {
+                toggleMiniMap();
+            }
+            
+            // Pause with 'P' key or Escape
+            if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                togglePause();
+            }
+        }
+
+        // Handle key up
+        function handleKeyUp(e) {
+            state.keysPressed[e.key] = false;
+        }
+
+        // Toggle pause
+        function togglePause() {
+            state.paused = !state.paused;
+            pauseScreen.style.display = state.paused ? 'flex' : 'none';
+        }
+
+        // Update powerup timer
+        function updatePowerupTimer(deltaTime) {
+            if (state.activePowerup) {
+                state.powerupTimer -= deltaTime;
+                
+                // Update progress bar
+                const progress = Math.max(0, state.powerupTimer / state.powerupDuration * 100);
+                powerupProgress.style.width = `${progress}%`;
+                
+                // End powerup if timer expired
+                if (state.powerupTimer <= 0) {
+                    state.activePowerup.end();
+                    state.activePowerup = null;
+                    powerupIndicator.classList.add('hidden');
+                }
+            }
+        }
+
+        // Game loop
+        function gameLoop(timestamp) {
+            // Calculate delta time
+            const deltaTime = timestamp - state.lastUpdate;
+            state.lastUpdate = timestamp;
+            
+            if (!state.paused && !state.gameOver) {
+                // Update powerup timer
+                updatePowerupTimer(deltaTime);
+                
+                // Update player position based on keys pressed
+                if (deltaTime > 0) {
+                    const moveInterval = 150 / (state.playerSpeed || 1); // ms between moves
+                    
+                    if (timestamp - state.lastMoveTime > moveInterval) {
+                        if (state.keysPressed.ArrowUp) {
+                            updatePlayerPosition(0, -1);
+                            state.lastMoveTime = timestamp;
+                        } else if (state.keysPressed.ArrowDown) {
+                            updatePlayerPosition(0, 1);
+                            state.lastMoveTime = timestamp;
+                        } else if (state.keysPressed.ArrowLeft) {
+                            updatePlayerPosition(-1, 0);
+                            state.lastMoveTime = timestamp;
+                        } else if (state.keysPressed.ArrowRight) {
+                            updatePlayerPosition(1, 0);
+                            state.lastMoveTime = timestamp;
+                        }
+                    }
+                    
+                    // Update monster position less frequently
+                    state.monsterUpdateCounter += deltaTime;
+                    if (state.monsterUpdateCounter > moveInterval / state.monsterSpeed) {
+                        updateMonsterPosition();
+                        state.monsterUpdateCounter = 0;
+                    }
+                    
+                    // Update fog of war rendering
+                    for (let y = 0; y < state.mazeSize; y++) {
+                        for (let x = 0; x < state.mazeSize; x++) {
+                            const fogElements = document.querySelectorAll('.fog');
+                            const index = y * state.mazeSize + x;
+                            
+                            if (index < fogElements.length) {
+                                if (state.fogOfWar[y][x]) {
+                                    fogElements[index].style.display = 'block';
+                                } else {
+                                    fogElements[index].style.display = 'none';
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Event listeners
+        document.getElementById('startBtn').addEventListener('click', () => {
+            homeScreen.style.opacity = 0;
+            setTimeout(() => {
+                homeScreen.style.display = 'none';
+                gameContainer.classList.remove('hidden');
+                state.gameStarted = true;
+                state.lastMoveTime = 0;
+                initGame();
+            }, 1000);
         });
 
-        this.bCtx.drawImage(
-          player.sprite,
-          (player.x + 0.5) * this.cellSize - player.size / 2,
-          (player.y + 0.5) * this.cellSize - player.size / 2,
-          player.size,
-          player.size
-        );
-      });
-
-      this.ctx.globalCompositeOperation = 'source-over';
-      this.ctx.drawImage(this.buffer, 0, 0);
-
-      this.ctx.save();
-      this.ctx.globalCompositeOperation = 'destination-in';
-      this.players.forEach(player => {
-        const light = player.getLight();
-        const gradient = this.ctx.createRadialGradient(
-          light.x, light.y, 0,
-          light.x + Math.cos(light.angle) * light.radius * 0.8,
-          light.y + Math.sin(light.angle) * light.radius * 0.8,
-          light.radius
-        );
-        light.colorStops.forEach(stop => {
-          const rgba = stop.color.match(/rgba\((\d+), (\d+), (\d+), ([\d.]+)\)/);
-          gradient.addColorStop(stop.offset, `rgba(255, 255, 255, ${rgba ? rgba[4] : 1})`);
+        document.getElementById('howToPlayBtn').addEventListener('click', () => {
+            homeScreen.style.display = 'none';
+            howToPlayScreen.style.display = 'flex';
         });
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      });
-      this.ctx.restore();
 
-      this.ctx.globalCompositeOperation = 'destination-over';
-      this.ctx.fillStyle = 'white'; // Light background
-      this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-      this.ctx.globalCompositeOperation = 'source-over';
+        document.getElementById('backBtn').addEventListener('click', () => {
+            howToPlayScreen.style.display = 'none';
+            homeScreen.style.display = 'flex';
+        });
 
-      if (this.players.some(p => p.x === this.maze.exit.x && p.y === this.maze.exit.y)) {
-        this.level++;
-        document.getElementById('level').textContent = this.level;
-        this.newGame();
-      }
-    },
+        document.getElementById('restartBtn').addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            resetGame();
+        });
 
-    drawCell(x, y, ctx) {
-      ctx.fillStyle = this.colors.path;
-      ctx.fillRect(x * this.cellSize, y * this.cellSize, this.cellSize, this.cellSize);
+        document.getElementById('menuBtn').addEventListener('click', () => {
+            gameOverScreen.style.display = 'none';
+            gameContainer.classList.add('hidden');
+            homeScreen.style.display = 'flex';
+            homeScreen.style.opacity = 1;
+            state.gameStarted = false;
+        });
 
-      ctx.strokeStyle = this.colors.wall;
-      ctx.lineWidth = 2;
-      const cell = this.maze.grid[y][x];
-      if (cell.top) this.drawWall(ctx, x, y, x + 1, y);
-      if (cell.right) this.drawWall(ctx, x + 1, y, x + 1, y + 1);
-      if (cell.bottom) this.drawWall(ctx, x, y + 1, x + 1, y + 1);
-      if (cell.left) this.drawWall(ctx, x, y, x, y + 1);
-    },
+        document.getElementById('pauseBtn').addEventListener('click', () => {
+            togglePause();
+        });
 
-    drawWall(ctx, x1, y1, x2, y2) {
-      ctx.beginPath();
-      ctx.moveTo(x1 * this.cellSize, y1 * this.cellSize);
-      ctx.lineTo(x2 * this.cellSize, y2 * this.cellSize);
-      ctx.stroke();
-    },
+        document.getElementById('resumeBtn').addEventListener('click', () => {
+            togglePause();
+        });
 
-    resize() {
-      if (!this.maze) return;
-      const size = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.75);
-      this.canvas.width = this.buffer.width = size;
-      this.canvas.height = this.buffer.height = size;
-      this.cellSize = size / this.maze.size;
-      this.draw();
-    }
-  };
+        document.getElementById('restartFromPauseBtn').addEventListener('click', () => {
+            pauseScreen.style.display = 'none';
+            state.paused = false;
+            resetGame();
+        });
 
-  function toggleFullscreen() {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  }
-
-  function startGame(mode) {
-    document.getElementById('menu').style.display = 'none';
-    try {
-      document.getElementById('ambience').play();
-    } catch(e) {
-      console.log('Audio playback failed:', e);
-    }
-    Game.level = 1;
-    document.getElementById('level').textContent = Game.level;
-    Game.init(mode);
-    toggleFullscreen();
-  }
-
-  function showInstructions() {
-    alert(`Controls:
-Single Player: Arrow keys
-Two Players:
-- Player 1: Arrow keys
-- Player 2: WASD
-
-Features:
-- Dynamic torch lighting
-- Directional light beams
-- Realistic shadows
-- Progressive difficulty
-- Player trails`);
-  }
-
-  document.addEventListener('fullscreenchange', () => Game.resize());
-  window.addEventListener('resize', () => Game.resize());
-
-  document.getElementById('startSingle').addEventListener('click', () => startGame(1));
-  document.getElementById('startTwo').addEventListener('click', () => startGame(2));
-  document.getElementById('instructions').addEventListener('click', showInstructions);
-</script>
-</body>
+        document.getElementById('quitBtn').addEventListener('click', () => {
+            pauseScreen.style.display = 'none';
+            gameContainer.classList.add('hidden');
+            homeScreen.style.display = 'flex';
+            homeScreen.style.opacity = 1;
+            state.gameStarted = false;
+            state.paused = false;
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'94d5712ed0a2fec0',t:'MTc0OTUyMjU3OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
