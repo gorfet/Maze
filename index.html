@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Labyrinth Descent: Mobile Edition</title>
+    <title>Labyrinth</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -14,15 +14,21 @@
             --maze-size: 15;
         }
         
-        body {
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
+        }
+        
+        body {
             overflow: hidden;
             font-family: 'Roboto', sans-serif;
             background-color: #000;
             touch-action: none;
             -webkit-tap-highlight-color: transparent;
             user-select: none;
+            height: 100vh;
+            width: 100vw;
         }
         
         .title {
@@ -41,6 +47,11 @@
             position: absolute;
             z-index: 100;
             transition: opacity 1s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
         
         .game-container {
@@ -49,17 +60,17 @@
             height: 100vh;
             overflow: hidden;
             background-color: #0a0a0a;
+            display: none;
         }
         
         .maze {
             position: relative;
-            margin: 0 auto;
+            margin: auto;
             transition: transform 0.5s ease-out;
         }
         
         .cell {
             position: absolute;
-            box-sizing: border-box;
             transition: background-color 0.3s ease;
         }
         
@@ -131,7 +142,7 @@
         }
         
         .controls {
-            position: absolute;
+            position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
@@ -139,20 +150,26 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+        }
+        
+        .directional-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 5px;
+            width: 150px;
+            height: 150px;
         }
         
         .control-btn {
-            width: 65px;
-            height: 65px;
             background-color: rgba(255, 255, 255, 0.2);
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 28px;
+            font-size: 24px;
             color: white;
-            margin: 0 5px;
             user-select: none;
             pointer-events: auto;
             backdrop-filter: blur(5px);
@@ -165,10 +182,24 @@
             transform: scale(0.95);
         }
         
-        .directional-controls {
-            display: flex;
-            justify-content: center;
-            gap: 8px;
+        #upBtn {
+            grid-column: 2;
+            grid-row: 1;
+        }
+        
+        #leftBtn {
+            grid-column: 1;
+            grid-row: 2;
+        }
+        
+        #rightBtn {
+            grid-column: 3;
+            grid-row: 2;
+        }
+        
+        #downBtn {
+            grid-column: 2;
+            grid-row: 3;
         }
         
         .game-over, .level-complete, .pause-screen {
@@ -194,6 +225,7 @@
             overflow: hidden;
             border: none;
             outline: none;
+            font-family: 'Orbitron', sans-serif;
         }
         
         .btn:before {
@@ -238,7 +270,7 @@
         
         .mini-map {
             position: absolute;
-            bottom: 110px;
+            bottom: 120px;
             right: 15px;
             width: 120px;
             height: 120px;
@@ -258,7 +290,6 @@
         
         .mini-map-cell {
             position: absolute;
-            box-sizing: border-box;
         }
         
         .mini-map-wall {
@@ -285,18 +316,6 @@
             background-color: #00ff00;
             border-radius: 50%;
             z-index: 1;
-        }
-        
-        .stats {
-            position: absolute;
-            top: 60px;
-            left: 10px;
-            background-color: rgba(0, 0, 0, 0.7);
-            border-radius: 5px;
-            padding: 10px;
-            color: white;
-            font-size: 14px;
-            z-index: 10;
         }
         
         .notification {
@@ -364,6 +383,11 @@
             padding: 10px 15px;
             background: rgba(0, 0, 0, 0.7);
             border-bottom: 1px solid #333;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 11;
         }
         
         .mobile-stats {
@@ -404,51 +428,24 @@
             align-items: center;
             color: white;
             font-size: 18px;
+            pointer-events: auto;
         }
         
-        /* Touch joystick */
-        .joystick-container {
+        /* Desktop controls */
+        .desktop-controls {
             position: absolute;
             bottom: 20px;
-            left: 20px;
-            width: 120px;
-            height: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
             z-index: 10;
-        }
-        
-        .joystick-base {
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.15);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            backdrop-filter: blur(5px);
-        }
-        
-        .joystick-handle {
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 200, 255, 0.3);
-            border-radius: 50%;
-            position: absolute;
-            transition: transform 0.1s ease;
-            box-shadow: 0 0 10px rgba(0, 200, 255, 0.3);
-        }
-        
-        /* Swipe area */
-        .swipe-area {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 70%;
-            z-index: 5;
+            text-align: center;
+            display: none;
         }
         
         /* Responsive adjustments */
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
             :root {
                 --cell-size: 24px;
             }
@@ -456,29 +453,38 @@
             .mini-map {
                 width: 100px;
                 height: 100px;
-                bottom: 100px;
+                bottom: 140px;
             }
             
-            .joystick-container {
-                width: 100px;
-                height: 100px;
-            }
-            
-            .joystick-handle {
-                width: 50px;
-                height: 50px;
+            .directional-controls {
+                width: 140px;
+                height: 140px;
             }
             
             .control-btn {
-                width: 60px;
-                height: 60px;
-                font-size: 24px;
+                width: 45px;
+                height: 45px;
+                font-size: 20px;
+            }
+            
+            .desktop-controls {
+                display: none;
             }
         }
         
-        @media (max-width: 360px) {
+        @media (min-width: 769px) {
+            .controls {
+                display: none;
+            }
+            
+            .desktop-controls {
+                display: block;
+            }
+        }
+        
+        @media (max-width: 480px) {
             :root {
-                --cell-size: 22px;
+                --cell-size: 20px;
             }
             
             .mobile-stats {
@@ -492,27 +498,68 @@
             .stat-value {
                 font-size: 16px;
             }
+            
+            .directional-controls {
+                width: 130px;
+                height: 130px;
+            }
+            
+            .control-btn {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .home-screen h1 {
+                font-size: 2.5rem;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            :root {
+                --cell-size: 20px;
+            }
+            
+            .controls {
+                bottom: 10px;
+            }
+            
+            .mini-map {
+                bottom: 110px;
+            }
+        }
+        
+        @media (max-height: 600px) {
+            :root {
+                --cell-size: 18px;
+            }
+            
+            .controls {
+                bottom: 5px;
+            }
+            
+            .mini-map {
+                bottom: 100px;
+                width: 90px;
+                height: 90px;
+            }
+        }
+        
+        /* Home screen particles */
+        .particle {
+            position: absolute;
+            border-radius: 50%;
         }
     </style>
 </head>
 <body class="bg-black text-white">
     <!-- Home Screen -->
-    <div id="homeScreen" class="home-screen flex flex-col items-center justify-center">
-        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-            <div id="particleContainer" class="w-full h-full"></div>
-        </div>
+    <div id="homeScreen" class="home-screen">
+        <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0" id="particleContainer"></div>
         
-        <h1 class="title text-5xl md:text-6xl mb-6 text-red-500 z-10">Labyrinth Descent</h1>
-        <div class="w-56 h-56 relative mb-6 z-10">
+        <h1 class="title text-4xl md:text-6xl mb-6 text-red-500 z-10">Labyrinth</h1>
+        <div class="w-48 h-48 md:w-56 md:h-56 relative mb-6 z-10">
             <svg class="w-full h-full" viewBox="0 0 100 100">
-                <!-- Maze background -->
-                <defs>
-                    <radialGradient id="mazeGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" stop-color="#16213e" />
-                        <stop offset="100%" stop-color="#0f0f0f" />
-                    </radialGradient>
-                </defs>
-                <rect x="0" y="0" width="100" height="100" fill="url(#mazeGradient)" />
+                <rect x="0" y="0" width="100" height="100" fill="#0f0f0f" />
                 <path d="M10,10 L90,10 L90,90 L10,90 Z" fill="none" stroke="#444" stroke-width="2" />
                 <path d="M20,10 L20,30 L40,30 L40,20 L60,20 L60,40 L50,40 L50,60 L70,60 L70,80 L90,80" fill="none" stroke="#444" stroke-width="2" />
                 <path d="M10,20 L30,20 L30,40 L10,40" fill="none" stroke="#444" stroke-width="2" />
@@ -523,27 +570,25 @@
                 <path d="M80,60 L90,60" fill="none" stroke="#444" stroke-width="2" />
                 <path d="M10,80 L30,80" fill="none" stroke="#444" stroke-width="2" />
                 
-                <!-- Character -->
                 <circle id="homeCharacter" cx="15" cy="15" r="5" fill="#00ccff">
                     <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
                 </circle>
                 
-                <!-- Monster -->
                 <circle id="homeMonster" cx="85" cy="85" r="5" fill="#ff3333">
                     <animate attributeName="opacity" values="0.7;1;0.7" dur="2s" repeatCount="indefinite" />
                 </circle>
             </svg>
         </div>
-        <div class="flex flex-col items-center z-10">
-            <button id="startBtn" class="btn bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full text-xl mb-4">
+        <div class="flex flex-col items-center z-10 w-full max-w-md">
+            <button id="startBtn" class="btn bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-8 rounded-full text-xl mb-4 w-48">
                 START GAME
             </button>
-            <button id="howToPlayBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-lg mb-4">
+            <button id="howToPlayBtn" class="btn bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-full text-lg mb-4 w-40">
                 HOW TO PLAY
             </button>
-            <div class="text-center max-w-md px-4">
+            <div class="text-center px-4">
                 <p class="mb-2 text-gray-300">Navigate through endless mazes while avoiding traps and a relentless monster.</p>
-                <p class="text-sm text-gray-400">Use the on-screen controls to move.</p>
+                <p class="text-sm text-gray-400">Use arrow keys or on-screen controls to move</p>
             </div>
         </div>
     </div>
@@ -595,7 +640,7 @@
     </div>
 
     <!-- Game Container -->
-    <div id="gameContainer" class="game-container hidden">
+    <div id="gameContainer" class="game-container">
         <!-- Mobile Header -->
         <div class="mobile-header">
             <div class="mobile-stats">
@@ -609,10 +654,10 @@
                 </div>
             </div>
             <div class="action-buttons">
-                <div id="mapBtn" class="action-btn pointer-events-auto">
+                <div id="mapBtn" class="action-btn">
                     <i class="fas fa-map"></i>
                 </div>
-                <div id="pauseBtn" class="action-btn pointer-events-auto">
+                <div id="pauseBtn" class="action-btn">
                     <i class="fas fa-pause"></i>
                 </div>
             </div>
@@ -641,31 +686,27 @@
         
         <!-- Mobile Controls -->
         <div class="controls">
-            <div class="control-btn" id="upBtn">
-                <i class="fas fa-arrow-up"></i>
-            </div>
             <div class="directional-controls">
+                <div class="control-btn" id="upBtn">
+                    <i class="fas fa-arrow-up"></i>
+                </div>
                 <div class="control-btn" id="leftBtn">
                     <i class="fas fa-arrow-left"></i>
                 </div>
                 <div class="control-btn" id="rightBtn">
                     <i class="fas fa-arrow-right"></i>
                 </div>
-            </div>
-            <div class="control-btn" id="downBtn">
-                <i class="fas fa-arrow-down"></i>
-            </div>
-        </div>
-        
-        <!-- Touch Joystick -->
-        <div class="joystick-container" id="joystickContainer">
-            <div class="joystick-base">
-                <div class="joystick-handle" id="joystickHandle"></div>
+                <div class="control-btn" id="downBtn">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
             </div>
         </div>
         
-        <!-- Swipe Area -->
-        <div class="swipe-area" id="swipeArea"></div>
+        <!-- Desktop Controls -->
+        <div class="desktop-controls">
+            <p>Use arrow keys to move</p>
+            <p>Press M for map | P to pause</p>
+        </div>
         
         <!-- Game Over Screen -->
         <div id="gameOver" class="game-over">
@@ -731,15 +772,13 @@
             gameOver: false,
             keysPressed: {},
             lastUpdate: 0,
-            monsterSpeed: 0.7, // Relative to player speed
+            monsterSpeed: 0.7,
             monsterUpdateCounter: 0,
             miniMapVisible: false,
             activePowerup: null,
             powerupTimer: 0,
-            powerupDuration: 10000, // 10 seconds
-            particles: [],
-            joystickActive: false,
-            joystickDirection: { x: 0, y: 0 }
+            powerupDuration: 10000,
+            particles: []
         };
 
         // DOM Elements
@@ -756,8 +795,6 @@
         const finalScoreElement = document.getElementById('finalScore');
         const nextFloorElement = document.getElementById('nextFloor');
         const currentScoreElement = document.getElementById('currentScore');
-        const homeCharacter = document.getElementById('homeCharacter');
-        const homeMonster = document.getElementById('homeMonster');
         const miniMap = document.getElementById('miniMap');
         const miniMapContent = document.getElementById('miniMapContent');
         const powerupIndicator = document.getElementById('powerupIndicator');
@@ -765,122 +802,21 @@
         const powerupProgress = document.getElementById('powerupProgress');
         const notification = document.getElementById('notification');
         const particleContainer = document.getElementById('particleContainer');
-        const joystickHandle = document.getElementById('joystickHandle');
-        const joystickContainer = document.getElementById('joystickContainer');
-        const swipeArea = document.getElementById('swipeArea');
-
-        // Character SVG
-        const characterSVG = `
-            <svg viewBox="0 0 50 50" width="100%" height="100%">
-                <defs>
-                    <radialGradient id="playerGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" stop-color="#00eeff" />
-                        <stop offset="100%" stop-color="#0077ff" />
-                    </radialGradient>
-                </defs>
-                <circle cx="25" cy="25" r="22" fill="url(#playerGradient)" opacity="0.7">
-                    <animate attributeName="r" values="22;20;22" dur="2s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="25" cy="25" r="15" fill="#00eeff" opacity="0.9" />
-                <circle cx="20" cy="20" r="4" fill="white" />
-                <circle cx="30" cy="20" r="4" fill="white" />
-                <circle cx="20" cy="20" r="2" fill="black" />
-                <circle cx="30" cy="20" r="2" fill="black" />
-                <path d="M18,30 Q25,35 32,30" stroke="black" stroke-width="2" fill="none" />
-            </svg>
-        `;
-
-        // Monster SVG
-        const monsterSVG = `
-            <svg viewBox="0 0 50 50" width="100%" height="100%">
-                <defs>
-                    <radialGradient id="monsterGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
-                        <stop offset="0%" stop-color="#ff5555" />
-                        <stop offset="100%" stop-color="#990000" />
-                    </radialGradient>
-                </defs>
-                <circle cx="25" cy="25" r="22" fill="url(#monsterGradient)" opacity="0.7">
-                    <animate attributeName="r" values="22;20;22" dur="1.5s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="25" cy="25" r="15" fill="#ff0000" opacity="0.9" />
-                <circle cx="20" cy="20" r="4" fill="black" />
-                <circle cx="30" cy="20" r="4" fill="black" />
-                <circle cx="20" cy="20" r="1" fill="white" />
-                <circle cx="30" cy="20" r="1" fill="white" />
-                <path d="M15,30 Q25,20 35,30" stroke="black" stroke-width="2" fill="none" />
-                <path d="M15,25 L10,20 M35,25 L40,20" stroke="black" stroke-width="2" />
-                <path d="M15,35 L10,40 M35,35 L40,40" stroke="black" stroke-width="2" />
-            </svg>
-        `;
-
-        // Power-up types
-        const powerupTypes = [
-            {
-                name: "Speed Boost",
-                color: "#ffd700",
-                effect: () => {
-                    state.playerSpeed = 2;
-                    showNotification("Speed Boost activated!");
-                },
-                end: () => {
-                    state.playerSpeed = 1;
-                }
-            },
-            {
-                name: "Invisibility",
-                color: "#00ffff",
-                effect: () => {
-                    state.playerInvisible = true;
-                    state.playerElement.style.opacity = "0.5";
-                    showNotification("Invisibility activated!");
-                },
-                end: () => {
-                    state.playerInvisible = false;
-                    state.playerElement.style.opacity = "1";
-                }
-            },
-            {
-                name: "Expanded Vision",
-                color: "#9966ff",
-                effect: () => {
-                    state.originalVisibilityRadius = state.visibilityRadius;
-                    state.visibilityRadius += 2;
-                    showNotification("Expanded Vision activated!");
-                    updateFogOfWar();
-                },
-                end: () => {
-                    state.visibilityRadius = state.originalVisibilityRadius;
-                    updateFogOfWar();
-                }
-            },
-            {
-                name: "Monster Slow",
-                color: "#ff9900",
-                effect: () => {
-                    state.originalMonsterSpeed = state.monsterSpeed;
-                    state.monsterSpeed *= 0.5;
-                    showNotification("Monster Slowed!");
-                },
-                end: () => {
-                    state.monsterSpeed = state.originalMonsterSpeed;
-                }
-            }
-        ];
 
         // Create particles for home screen
         function createParticles() {
             for (let i = 0; i < 50; i++) {
                 const particle = document.createElement('div');
-                particle.style.position = 'absolute';
-                particle.style.width = Math.random() * 3 + 1 + 'px';
-                particle.style.height = particle.style.width;
-                particle.style.backgroundColor = `rgba(${Math.random() * 100 + 100}, ${Math.random() * 100 + 100}, ${Math.random() * 255}, ${Math.random() * 0.5 + 0.3})`;
-                particle.style.borderRadius = '50%';
+                particle.classList.add('particle');
+                const size = Math.random() * 3 + 1;
+                particle.style.width = `${size}px`;
+                particle.style.height = `${size}px`;
+                particle.style.backgroundColor = `rgba(${Math.floor(Math.random() * 100 + 100)}, ${Math.floor(Math.random() * 100 + 100)}, ${Math.floor(Math.random() * 255)}, ${Math.random() * 0.5 + 0.3})`;
                 
                 const x = Math.random() * window.innerWidth;
                 const y = Math.random() * window.innerHeight;
-                particle.style.left = x + 'px';
-                particle.style.top = y + 'px';
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
                 
                 const speed = Math.random() * 1 + 0.5;
                 const angle = Math.random() * Math.PI * 2;
@@ -911,8 +847,8 @@
                 if (particle.y < 0) particle.y = window.innerHeight;
                 if (particle.y > window.innerHeight) particle.y = 0;
                 
-                particle.element.style.left = particle.x + 'px';
-                particle.element.style.top = particle.y + 'px';
+                particle.element.style.left = `${particle.x}px`;
+                particle.element.style.top = `${particle.y}px`;
             }
             
             if (!state.gameStarted) {
@@ -920,27 +856,6 @@
             }
         }
 
-        // Animate home screen characters
-        function animateHomeScreen() {
-            const time = Date.now() * 0.001;
-            
-            // Move character along a path
-            const characterX = 15 + Math.sin(time) * 10;
-            const characterY = 15 + Math.cos(time * 0.7) * 10;
-            homeCharacter.setAttribute('cx', characterX);
-            homeCharacter.setAttribute('cy', characterY);
-            
-            // Move monster to chase character with delay
-            const monsterX = 85 - Math.sin(time - 1) * 10;
-            const monsterY = 85 - Math.cos(time * 0.7 - 1) * 10;
-            homeMonster.setAttribute('cx', monsterX);
-            homeMonster.setAttribute('cy', monsterY);
-            
-            if (!state.gameStarted) {
-                requestAnimationFrame(animateHomeScreen);
-            }
-        }
-        
         // Show notification
         function showNotification(message, duration = 3000) {
             notification.textContent = message;
@@ -995,132 +910,12 @@
             // Map button
             document.getElementById('mapBtn').addEventListener('click', toggleMiniMap);
             
-            // Joystick touch events
-            initJoystick();
-            
-            // Swipe area for directional controls
-            initSwipeControls();
+            // Keyboard events
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
             
             // Start game loop
             requestAnimationFrame(gameLoop);
-        }
-
-        // Initialize joystick controls
-        function initJoystick() {
-            let touchId = null;
-            
-            joystickContainer.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                if (touchId !== null) return;
-                
-                const touch = e.changedTouches[0];
-                touchId = touch.identifier;
-                state.joystickActive = true;
-                updateJoystickPosition(touch.clientX, touch.clientY);
-            });
-            
-            document.addEventListener('touchmove', (e) => {
-                if (!state.joystickActive) return;
-                
-                for (const touch of e.changedTouches) {
-                    if (touch.identifier === touchId) {
-                        e.preventDefault();
-                        updateJoystickPosition(touch.clientX, touch.clientY);
-                        break;
-                    }
-                }
-            });
-            
-            document.addEventListener('touchend', (e) => {
-                if (!state.joystickActive) return;
-                
-                for (const touch of e.changedTouches) {
-                    if (touch.identifier === touchId) {
-                        e.preventDefault();
-                        resetJoystick();
-                        touchId = null;
-                        break;
-                    }
-                }
-            });
-        }
-        
-        function updateJoystickPosition(x, y) {
-            const rect = joystickContainer.getBoundingClientRect();
-            const centerX = rect.left + rect.width / 2;
-            const centerY = rect.top + rect.height / 2;
-            
-            const dx = x - centerX;
-            const dy = y - centerY;
-            const distance = Math.min(Math.sqrt(dx * dx + dy * dy), rect.width / 2);
-            
-            const angle = Math.atan2(dy, dx);
-            const moveX = Math.cos(angle) * distance;
-            const moveY = Math.sin(angle) * distance;
-            
-            joystickHandle.style.transform = `translate(${moveX}px, ${moveY}px)`;
-            
-            // Determine direction
-            state.joystickDirection = { x: 0, y: 0 };
-            
-            if (distance > 20) {
-                if (Math.abs(angle) > Math.PI * 3/4 || Math.abs(angle) < Math.PI * 1/4) {
-                    state.joystickDirection.x = Math.cos(angle) > 0 ? 1 : -1;
-                }
-                
-                if (Math.abs(angle) > Math.PI * 1/4 && Math.abs(angle) < Math.PI * 3/4) {
-                    state.joystickDirection.y = Math.sin(angle) > 0 ? 1 : -1;
-                }
-            }
-        }
-        
-        function resetJoystick() {
-            joystickHandle.style.transform = 'translate(0, 0)';
-            state.joystickActive = false;
-            state.joystickDirection = { x: 0, y: 0 };
-        }
-        
-        // Initialize swipe controls
-        function initSwipeControls() {
-            let touchStartX = 0;
-            let touchStartY = 0;
-            
-            swipeArea.addEventListener('touchstart', (e) => {
-                const touch = e.touches[0];
-                touchStartX = touch.clientX;
-                touchStartY = touch.clientY;
-            });
-            
-            swipeArea.addEventListener('touchmove', (e) => {
-                e.preventDefault();
-            });
-            
-            swipeArea.addEventListener('touchend', (e) => {
-                const touch = e.changedTouches[0];
-                const diffX = touch.clientX - touchStartX;
-                const diffY = touch.clientY - touchStartY;
-                
-                // Determine primary direction
-                if (Math.abs(diffX) > Math.abs(diffY)) {
-                    // Horizontal swipe
-                    if (diffX > 50) {
-                        state.keysPressed.ArrowRight = true;
-                        setTimeout(() => state.keysPressed.ArrowRight = false, 200);
-                    } else if (diffX < -50) {
-                        state.keysPressed.ArrowLeft = true;
-                        setTimeout(() => state.keysPressed.ArrowLeft = false, 200);
-                    }
-                } else {
-                    // Vertical swipe
-                    if (diffY > 50) {
-                        state.keysPressed.ArrowDown = true;
-                        setTimeout(() => state.keysPressed.ArrowDown = false, 200);
-                    } else if (diffY < -50) {
-                        state.keysPressed.ArrowUp = true;
-                        setTimeout(() => state.keysPressed.ArrowUp = false, 200);
-                    }
-                }
-            });
         }
 
         // Toggle mini-map
@@ -1269,7 +1064,7 @@
             state.maze[size - 2][size - 2] = 0;
             
             // Add some random paths to make maze less linear
-            const extraPaths = Math.floor(size * size * 0.05); // 5% of cells
+            const extraPaths = Math.floor(size * size * 0.05);
             for (let i = 0; i < extraPaths; i++) {
                 const x = Math.floor(Math.random() * (size - 2)) + 1;
                 const y = Math.floor(Math.random() * (size - 2)) + 1;
@@ -1343,7 +1138,7 @@
             for (let y = 1; y < size - 1; y++) {
                 for (let x = 1; x < size - 1; x++) {
                     if (state.maze[y][x] === 0) {
-                        const distance = Math.abs(x - 1) + Math.abs(y - 1); // Distance from start
+                        const distance = Math.abs(x - 1) + Math.abs(y - 1);
                         if (distance > bestDistance) {
                             bestDistance = distance;
                             bestPosition = { x, y };
@@ -1358,7 +1153,7 @@
         // Place traps
         function placeTraps() {
             const size = state.mazeSize;
-            const numTraps = Math.floor(size * size * 0.05) + Math.floor(state.currentFloor / 2); // More traps on higher floors
+            const numTraps = Math.floor(size * size * 0.05) + Math.floor(state.currentFloor / 2);
             state.traps = [];
             
             for (let i = 0; i < numTraps; i++) {
@@ -1385,7 +1180,7 @@
         // Place powerups
         function placePowerups() {
             const size = state.mazeSize;
-            const numPowerups = Math.min(2 + Math.floor(state.currentFloor / 3), 5); // More powerups on higher floors, max 5
+            const numPowerups = Math.min(2 + Math.floor(state.currentFloor / 3), 5);
             state.powerups = [];
             
             for (let i = 0; i < numPowerups; i++) {
@@ -1404,7 +1199,17 @@
                         !state.powerups.some(powerup => powerup.x === x && powerup.y === y)) {
                         
                         // Random powerup type
-                        const type = powerupTypes[Math.floor(Math.random() * powerupTypes.length)];
+                        const type = {
+                            name: "Speed Boost",
+                            color: "#ffd700",
+                            effect: () => {
+                                state.playerSpeed = 2;
+                                showNotification("Speed Boost activated!");
+                            },
+                            end: () => {
+                                state.playerSpeed = 1;
+                            }
+                        };
                         state.powerups.push({ x, y, type });
                         placed = true;
                     }
@@ -1449,7 +1254,7 @@
             // Center the maze
             const offsetX = (window.innerWidth - mazeSizePx) / 2;
             const offsetY = (window.innerHeight - mazeSizePx) / 2;
-            mazeElement.style.left = `${offsetX}px`;
+            //mazeElement.style.left = `${offsetX}px`;
             mazeElement.style.top = `${offsetY}px`;
             
             // Render cells
@@ -1515,7 +1320,14 @@
             player.style.height = `${state.cellSize}px`;
             player.style.left = `${state.playerPosition.x * state.cellSize}px`;
             player.style.top = `${state.playerPosition.y * state.cellSize}px`;
-            player.innerHTML = characterSVG;
+            player.innerHTML = `
+                <svg viewBox="0 0 50 50" width="100%" height="100%">
+                    <circle cx="25" cy="25" r="22" fill="#00ccff" opacity="0.7">
+                        <animate attributeName="r" values="22;20;22" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx="25" cy="25" r="15" fill="#00eeff" opacity="0.9" />
+                </svg>
+            `;
             mazeElement.appendChild(player);
             state.playerElement = player;
             
@@ -1526,7 +1338,14 @@
             monster.style.height = `${state.cellSize}px`;
             monster.style.left = `${state.monsterPosition.x * state.cellSize}px`;
             monster.style.top = `${state.monsterPosition.y * state.cellSize}px`;
-            monster.innerHTML = monsterSVG;
+            monster.innerHTML = `
+                <svg viewBox="0 0 50 50" width="100%" height="100%">
+                    <circle cx="25" cy="25" r="22" fill="#ff3333" opacity="0.7">
+                        <animate attributeName="r" values="22;20;22" dur="1.5s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx="25" cy="25" r="15" fill="#ff0000" opacity="0.9" />
+                </svg>
+            `;
             mazeElement.appendChild(monster);
             state.monsterElement = monster;
         }
@@ -1564,23 +1383,31 @@
         function updateMonsterPosition() {
             if (!state.monsterActive || state.gameOver || state.paused) return;
             
-            // If player is invisible, monster moves randomly
-            if (state.playerInvisible) {
-                moveMonsterRandomly();
-                return;
+            // Simple pathfinding towards player
+            const dx = state.playerPosition.x - state.monsterPosition.x;
+            const dy = state.playerPosition.y - state.monsterPosition.y;
+            
+            let moveX = 0;
+            let moveY = 0;
+            
+            // Prioritize the direction with the largest difference
+            if (Math.abs(dx) > Math.abs(dy)) {
+                moveX = dx > 0 ? 1 : -1;
+            } else {
+                moveY = dy > 0 ? 1 : -1;
             }
             
-            // Simple A* pathfinding towards player
-            const path = findPathToPlayer();
-            if (path && path.length > 1) {
-                const nextStep = path[1]; // path[0] is current position
-                
-                state.monsterPosition.x = nextStep.x;
-                state.monsterPosition.y = nextStep.y;
+            // Check if the move is valid
+            const newX = state.monsterPosition.x + moveX;
+            const newY = state.monsterPosition.y + moveY;
+            
+            if (newX >= 0 && newX < state.mazeSize && newY >= 0 && newY < state.mazeSize && state.maze[newY][newX] === 0) {
+                state.monsterPosition.x = newX;
+                state.monsterPosition.y = newY;
                 
                 // Update monster element position
-                state.monsterElement.style.left = `${nextStep.x * state.cellSize}px`;
-                state.monsterElement.style.top = `${nextStep.y * state.cellSize}px`;
+                state.monsterElement.style.left = `${newX * state.cellSize}px`;
+                state.monsterElement.style.top = `${newY * state.cellSize}px`;
                 
                 // Check for collisions
                 checkCollisions();
@@ -1590,142 +1417,6 @@
                     updateMiniMap();
                 }
             }
-        }
-
-        // Move monster randomly
-        function moveMonsterRandomly() {
-            const { x: startX, y: startY } = state.monsterPosition;
-            
-            const directions = [
-                [0, -1], // North
-                [1, 0],  // East
-                [0, 1],  // South
-                [-1, 0]  // West
-            ].filter(([dx, dy]) => {
-                const nx = startX + dx;
-                const ny = startY + dy;
-                return nx >= 0 && nx < state.mazeSize && ny >= 0 && ny < state.mazeSize && state.maze[ny][nx] === 0;
-            });
-            
-            if (directions.length > 0) {
-                const [dx, dy] = directions[Math.floor(Math.random() * directions.length)];
-                state.monsterPosition.x = startX + dx;
-                state.monsterPosition.y = startY + dy;
-                
-                // Update monster element position
-                state.monsterElement.style.left = `${state.monsterPosition.x * state.cellSize}px`;
-                state.monsterElement.style.top = `${state.monsterPosition.y * state.cellSize}px`;
-                
-                // Check for collisions
-                checkCollisions();
-            }
-        }
-
-        // Simple A* pathfinding
-        function findPathToPlayer() {
-            const { x: targetX, y: targetY } = state.playerPosition;
-            const { x: startX, y: startY } = state.monsterPosition;
-            
-            // If player is in fog, monster can't see them
-            if (state.fogOfWar[targetY][targetX]) {
-                // Random movement
-                const directions = [
-                    [0, -1], // North
-                    [1, 0],  // East
-                    [0, 1],  // South
-                    [-1, 0]  // West
-                ].filter(([dx, dy]) => {
-                    const nx = startX + dx;
-                    const ny = startY + dy;
-                    return nx >= 0 && nx < state.mazeSize && ny >= 0 && ny < state.mazeSize && state.maze[ny][nx] === 0;
-                });
-                
-                if (directions.length > 0) {
-                    const [dx, dy] = directions[Math.floor(Math.random() * directions.length)];
-                    return [
-                        { x: startX, y: startY },
-                        { x: startX + dx, y: startY + dy }
-                    ];
-                }
-                return null;
-            }
-            
-            // If player is visible, use A* to find path
-            const openSet = [{ x: startX, y: startY, g: 0, h: 0, f: 0, parent: null }];
-            const closedSet = new Set();
-            
-            while (openSet.length > 0) {
-                // Find node with lowest f score
-                let current = 0;
-                for (let i = 1; i < openSet.length; i++) {
-                    if (openSet[i].f < openSet[current].f) {
-                        current = i;
-                    }
-                }
-                
-                const currentNode = openSet[current];
-                
-                // Check if we reached the target
-                if (currentNode.x === targetX && currentNode.y === targetY) {
-                    // Reconstruct path
-                    const path = [];
-                    let node = currentNode;
-                    while (node) {
-                        path.unshift({ x: node.x, y: node.y });
-                        node = node.parent;
-                    }
-                    return path;
-                }
-                
-                // Move current node from open to closed set
-                openSet.splice(current, 1);
-                closedSet.add(`${currentNode.x},${currentNode.y}`);
-                
-                // Check neighbors
-                const directions = [
-                    [0, -1], // North
-                    [1, 0],  // East
-                    [0, 1],  // South
-                    [-1, 0]  // West
-                ];
-                
-                for (const [dx, dy] of directions) {
-                    const nx = currentNode.x + dx;
-                    const ny = currentNode.y + dy;
-                    
-                    // Skip if out of bounds or wall
-                    if (nx < 0 || nx >= state.mazeSize || ny < 0 || ny >= state.mazeSize || state.maze[ny][nx] === 1) {
-                        continue;
-                    }
-                    
-                    // Skip if in closed set
-                    if (closedSet.has(`${nx},${ny}`)) {
-                        continue;
-                    }
-                    
-                    // Calculate g, h, and f scores
-                    const g = currentNode.g + 1;
-                    const h = Math.abs(nx - targetX) + Math.abs(ny - targetY);
-                    const f = g + h;
-                    
-                    // Check if already in open set with better score
-                    const existingIndex = openSet.findIndex(node => node.x === nx && node.y === ny);
-                    if (existingIndex !== -1 && openSet[existingIndex].g <= g) {
-                        continue;
-                    }
-                    
-                    // Add to open set
-                    if (existingIndex === -1) {
-                        openSet.push({ x: nx, y: ny, g, h, f, parent: currentNode });
-                    } else {
-                        openSet[existingIndex].g = g;
-                        openSet[existingIndex].f = f;
-                        openSet[existingIndex].parent = currentNode;
-                    }
-                }
-            }
-            
-            return null; // No path found
         }
 
         // Check for collisions
@@ -1820,6 +1511,28 @@
             }, 2000);
         }
 
+        // Handle key down
+        function handleKeyDown(e) {
+            if (state.paused) return;
+            
+            state.keysPressed[e.key] = true;
+            
+            // Toggle mini-map with 'M' key
+            if (e.key === 'm' || e.key === 'M') {
+                toggleMiniMap();
+            }
+            
+            // Pause with 'P' key or Escape
+            if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                togglePause();
+            }
+        }
+
+        // Handle key up
+        function handleKeyUp(e) {
+            state.keysPressed[e.key] = false;
+        }
+
         // Toggle pause
         function togglePause() {
             state.paused = !state.paused;
@@ -1847,41 +1560,29 @@
         // Game loop
         function gameLoop(timestamp) {
             // Calculate delta time
-            const deltaTime = timestamp - state.lastUpdate;
+            const deltaTime = state.lastUpdate ? timestamp - state.lastUpdate : 0;
             state.lastUpdate = timestamp;
             
             if (!state.paused && !state.gameOver) {
                 // Update powerup timer
                 updatePowerupTimer(deltaTime);
                 
-                // Update player position based on keys pressed or joystick
+                // Update player position based on keys pressed
                 if (deltaTime > 0) {
                     const moveInterval = 150 / (state.playerSpeed || 1); // ms between moves
                     
-                    if (timestamp - state.lastMoveTime > moveInterval) {
-                        let moved = false;
-                        
-                        // Joystick movement has priority
-                        if (state.joystickDirection.x !== 0 || state.joystickDirection.y !== 0) {
-                            updatePlayerPosition(state.joystickDirection.x, state.joystickDirection.y);
-                            moved = true;
-                        } 
-                        // Then check arrow keys
-                        else if (state.keysPressed.ArrowUp) {
+                    if (!state.lastMoveTime || timestamp - state.lastMoveTime > moveInterval) {
+                        if (state.keysPressed.ArrowUp) {
                             updatePlayerPosition(0, -1);
-                            moved = true;
+                            state.lastMoveTime = timestamp;
                         } else if (state.keysPressed.ArrowDown) {
                             updatePlayerPosition(0, 1);
-                            moved = true;
+                            state.lastMoveTime = timestamp;
                         } else if (state.keysPressed.ArrowLeft) {
                             updatePlayerPosition(-1, 0);
-                            moved = true;
+                            state.lastMoveTime = timestamp;
                         } else if (state.keysPressed.ArrowRight) {
                             updatePlayerPosition(1, 0);
-                            moved = true;
-                        }
-                        
-                        if (moved) {
                             state.lastMoveTime = timestamp;
                         }
                     }
@@ -1894,19 +1595,12 @@
                     }
                     
                     // Update fog of war rendering
-                    for (let y = 0; y < state.mazeSize; y++) {
-                        for (let x = 0; x < state.mazeSize; x++) {
-                            const fogElements = document.querySelectorAll('.fog');
-                            const index = y * state.mazeSize + x;
-                            
-                            if (index < fogElements.length) {
-                                if (state.fogOfWar[y][x]) {
-                                    fogElements[index].style.display = 'block';
-                                } else {
-                                    fogElements[index].style.display = 'none';
-                                }
-                            }
-                        }
+                    const fogElements = document.querySelectorAll('.fog');
+                    for (let i = 0; i < fogElements.length; i++) {
+                        const element = fogElements[i];
+                        const y = Math.floor(i / state.mazeSize);
+                        const x = i % state.mazeSize;
+                        element.style.display = state.fogOfWar[y][x] ? 'block' : 'none';
                     }
                 }
             }
@@ -1919,7 +1613,7 @@
             homeScreen.style.opacity = 0;
             setTimeout(() => {
                 homeScreen.style.display = 'none';
-                gameContainer.classList.remove('hidden');
+                gameContainer.style.display = 'block';
                 state.gameStarted = true;
                 state.lastMoveTime = 0;
                 initGame();
@@ -1943,7 +1637,7 @@
 
         document.getElementById('menuBtn').addEventListener('click', () => {
             gameOverScreen.style.display = 'none';
-            gameContainer.classList.add('hidden');
+            gameContainer.style.display = 'none';
             homeScreen.style.display = 'flex';
             homeScreen.style.opacity = 1;
             state.gameStarted = false;
@@ -1965,7 +1659,7 @@
 
         document.getElementById('quitBtn').addEventListener('click', () => {
             pauseScreen.style.display = 'none';
-            gameContainer.classList.add('hidden');
+            gameContainer.style.display = 'none';
             homeScreen.style.display = 'flex';
             homeScreen.style.opacity = 1;
             state.gameStarted = false;
@@ -1975,7 +1669,6 @@
         // Create particles and start animations
         createParticles();
         animateParticles();
-        animateHomeScreen();
     </script>
 </body>
 </html>
